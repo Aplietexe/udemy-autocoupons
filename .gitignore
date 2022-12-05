@@ -1,0 +1,4 @@
+.mypy_cache
+.venv
+.dccache
+__pycache__

@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "streetsidesoftware.code-spell-checker",
+    "snyk-security.snyk-vulnerability-scanner",
+    "sourcery.sourcery"
+  ]
+}

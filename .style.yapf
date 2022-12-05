@@ -1,0 +1,6 @@
+[style]
+based_on_style = google
+coalesce_brackets = True
+dedent_closing_brackets = True
+split_arguments_when_comma_terminated = True
+split_before_first_argument = True

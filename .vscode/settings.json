@@ -1,0 +1,12 @@
+{
+  "python.formatting.provider": "yapf",
+  "python.linting.pylintEnabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.pydocstyleEnabled": true,
+  "python.linting.banditEnabled": true,
+  "python.linting.banditArgs": ["--ini", "setup.cfg"],
+  "python.linting.pylintCategorySeverity.refactor": "Warning",
+  "python.linting.pylintCategorySeverity.convention": "Warning",
+  "cSpell.words": ["udemy", "Udemy"],
+  "isort.importStrategy": "fromEnvironment"
+}

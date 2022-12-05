@@ -1,0 +1,86 @@
+-r requirements.txt
+
+# Linting
+pylint==2.15.7
+flake8
+pycodestyle
+bandit==1.7.4
+isort
+
+## Pylint plugins
+perflint==0.7.3
+
+## Flake8 plugins
+### Miscellaneous
+dlint==0.13.0 # Best ractices and security
+flake8-bugbear # Bugs and design problems
+flake8-pie 
+hacking==5.0.0
+flake8-simplify # Simplyfies code
+wemake-python-styleguide==0.17.0
+
+### Bugs
+flake8-2020 # Misuse of sys.version or sys.version_info
+flake8-async # Bad async / asyncio practices
+flake8-encodings[classes] # Incorrect use of encodings
+flake8-secure-coding-standard 
+flake8-slots # Require __slots__ to be defined for subclasses of immutable types
+flake8_strftime # Platform-specific strftime codes
+flake8-string-format # Indexed parameters are used in strings
+flake8-useless-assert==0.4.3 # Useless assert statements
+flake8-warnings # Deprecated modules, classes, and functions
+flake8-mutable # Mutable default arguments
+
+### Clean code
+flake8-comprehensions # Improves comprehensions
+flake8-datetimez # Naive datetime
+flake8-literal # Styling of string literals
+flake8-newspaper-style # Function definition goes below its usage
+flake8-return # Unnecesary statements after return, break or continue
+flake8-SQL # Looks for SQL queries
+tryceratops # Exception handling antipatterns
+
+### Limitations
+flake8-no-implicit-concat 
+flake8-use-fstring # % and str.format formatting
+flake8-use-pathlib # Use pathlib instead of os.path
+flake8-no-pep420 # No implicit namespace packages (require __init__.py)
+
+### Naming
+flake8-variables-names # Clarify names and avoid shadowing builtins
+
+### Code complexity
+flake8-annotations-complexity 
+flake8-cognitive-complexity
+flake8-expression-complexity
+
+### Comments
+flake8-comments # Redundant comments
+flake8-executable # Shebangs
+flake8-noqa # noqa style
+
+### Docstrings
+flake8_sphinx_links # Double backticked strings should be links Python docs
+
+### Imports
+flake8-tidy-imports # Good import practices 
+flake8-type-checking # Manage type-checking imports
+
+### Testing
+flake8-aaa # Arrange-Act-Assert pattern
+flake8-assertive # Ensure the correct assert method is used
+flake8-mock # Non existent mock methods
+flake8-pytest-style # Pytest good practices
+
+### Type annotations
+flake8-annotations # Enforce type annotations
+flake8-new-union-types # Use new Union and Optional syntax
+flake8-pep585 # Use classes from the standard library
+flake8-future-annotations # Import future annotations when they could be used
+
+# Formatting
+yapf
+
+# Other tools
+pyupgrade
+add-trailing-comma
