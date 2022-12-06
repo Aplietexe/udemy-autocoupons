@@ -1,9 +1,12 @@
 """This module contains the UdemyDriver class."""
+from collections.abc import Callable
+
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
 from selenium.webdriver.support.wait import WebDriverWait
+from undetected_chromedriver import Chrome
 
 from udemy_autocoupons.constants import (
     PROFILE_DIRECTORY,
@@ -38,9 +41,6 @@ class UdemyDriver:
             WAIT_POLL_FREQUENCY,
         )
 
-    def _wait_for(self, locator: tuple[str, str]) -> WebElement:
-        return self._wait.until(EC.presence_of_element_located(locator))
-
     def enroll(self, course: UdemyCourse) -> None:
         """If the course is discounted, it enrolls the account in it.
 
@@ -53,10 +53,8 @@ class UdemyDriver:
         self.driver.get(url)
 
         # This shows even if the course is not discounted, so it's a safe wait
-        enroll_button: WebElement = self._wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, '[data-purpose*="buy-this-course-button"]'),
-            ),
+        enroll_button = self._wait_for_clickable(
+            '[data-purpose*="buy-this-course-button"]',
         )
 
         if not self._current_course_is_discounted():
@@ -67,11 +65,8 @@ class UdemyDriver:
         if not self._checkout_is_correct():
             return
 
-        checkout_button = self._wait.until(
-            EC.element_to_be_clickable((
-                By.CSS_SELECTOR,
-                '[class*="checkout-button--checkout-button--button"]',
-            )),
+        checkout_button = self._wait_for_clickable(
+            '[class*="checkout-button--checkout-button--button"]',
         )
         checkout_button.click()
 
@@ -87,28 +82,22 @@ class UdemyDriver:
             True if the course is discounted, False otherwise
 
         """
-        purchased_locator = (
-            By.CSS_SELECTOR,
-            '[class*="purchase-info"]',
-        )
-        price_locator = (
-            By.CSS_SELECTOR,
-            '[data-purpose*="course-price-text"] span:not(.ud-sr-only)',
-        )
-        free_badge_locator = (By.CSS_SELECTOR, '.ud-badge-free')
+        purchased_selector = '[class*="purchase-info"]'
+        price_selector = '[data-purpose*="course-price-text"] span:not(.ud-sr-only)'
+        free_badge_selector = '.ud-badge-free'
 
         self._wait.until(
             EC.any_of(
-                EC.presence_of_element_located(purchased_locator),
-                EC.presence_of_element_located(price_locator),
-                EC.presence_of_element_located(free_badge_locator),
+                self._ec_located(purchased_selector),
+                self._ec_located(price_selector),
+                self._ec_located(free_badge_selector),
             ),
         )
 
         return (
-            not self.driver.find_elements(*purchased_locator) and
-            not self.driver.find_elements(*free_badge_locator) and
-            '$' not in self.driver.find_elements(*price_locator)[0].text
+            not self._find_elements(purchased_selector) and
+            not self._find_elements(free_badge_selector) and
+            '$' not in self._find_elements(price_selector)[0].text
         )
 
     def _checkout_is_correct(self) -> bool:
@@ -121,21 +110,35 @@ class UdemyDriver:
             True if the checkout is correct, False otherwise.
 
         """
+        total_amount_locator = '[data-purpose*="total-amount-summary"] span:nth-child(2)'
+
         self._wait.until(
             EC.any_of(
                 EC.url_contains('/learn/lecture/'),
                 EC.url_contains('/cart/subscribe/course/'),
-                EC.presence_of_element_located((
-                    By.CSS_SELECTOR,
-                    '[data-purpose*="total-amount-summary"] span:nth-child(2)',
-                )),
+                self._ec_located(total_amount_locator),
             ),
         )
 
         if '/cart/checkout/express/course/' not in self.driver.current_url:
             return False
 
-        return self._wait_for((
-            By.CSS_SELECTOR,
-            '[data-purpose*="total-amount-summary"] span:nth-child(2)',
-        )).text.startswith('0')
+        return self._wait_for(total_amount_locator).text.startswith('0')
+
+    def _wait_for(self, css_selector: str) -> WebElement:
+        return self._wait.until(self._ec_located(css_selector))
+
+    def _wait_for_clickable(self, css_selector: str) -> WebElement:
+        return self._wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, css_selector)),
+        )
+
+    def _find(self, css_selector: str) -> WebElement:
+        return self.driver.find_element(By.CSS_SELECTOR, css_selector)
+
+    def _find_elements(self, css_selector: str) -> list[WebElement]:
+        return self.driver.find_elements(By.CSS_SELECTOR, css_selector)
+
+    @staticmethod
+    def _ec_located(css_selector: str) -> Callable[[Chrome], WebElement]:
+        return EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
