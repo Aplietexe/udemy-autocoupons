@@ -1,3 +1,6 @@
 # To enroll
 selenium
 undetected-chromedriver
+
+# To scrap
+aiohttp[speedups]

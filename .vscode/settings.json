@@ -7,6 +7,6 @@
   "python.linting.banditArgs": ["--ini", "setup.cfg"],
   "python.linting.pylintCategorySeverity.refactor": "Warning",
   "python.linting.pylintCategorySeverity.convention": "Warning",
-  "cSpell.words": ["udemy", "Udemy"],
+  "cSpell.words": ["aiohttp", "udemy", "Udemy"],
   "isort.importStrategy": "fromEnvironment"
 }

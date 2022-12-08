@@ -1,23 +1,42 @@
-"""This module contains the Scraper protocol."""
+"""This module contains the Scraper Abstract Base Class."""
 
-from typing import Protocol
+from abc import ABC, abstractmethod
+from asyncio import Queue as AsyncQueue
+from typing import Generic, TypeVar
 
 from aiohttp import ClientSession
 
-from udemy_autocoupons.queue_manager import QueueManager
+_PersistentT = TypeVar('_PersistentT')
 
 
-class Scraper(Protocol):
-    """All scrapers have to implement this protocol."""
+class Scraper(ABC, Generic[_PersistentT]):
+    """Scrapers have to inherit from this ABC."""
 
-    def __init__(self, manager: QueueManager, client: ClientSession) -> None:
+    @abstractmethod
+    def __init__(
+        self,
+        queue: AsyncQueue,
+        client: ClientSession,
+        persistent_data: _PersistentT | None,
+    ) -> None:
         """The initialization should have no side effects.
 
         Args:
-          manager: The queue manager that the scraper should use.
+          queue: The async queue where the scraped courses should be added.
           client: The aiohttp client that the scraper should use.
+          persistent_data: Persistent data previously returned by the scraper.
 
         """
 
-    def start(self) -> None:
+    @abstractmethod
+    async def scrap(self) -> None:
         """The scraper should start only when this method is called."""
+
+    @abstractmethod
+    def create_persistent_data(self) -> _PersistentT | None:
+        """The return value will be stored after a successful run.
+
+        Returns:
+          None if there's no data to store, the data otherwise.
+
+        """
