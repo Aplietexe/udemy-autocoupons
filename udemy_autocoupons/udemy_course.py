@@ -22,6 +22,21 @@ class UdemyCourse:
     url_id: str
     coupon: str | None
 
+    @property
+    def url(self) -> str:
+        """Creates the URL for the course with the coupon if it exists.
+
+        Returns:
+            The URL.
+
+        """
+        url = f'https://www.udemy.com/course/{self.url_id}/'
+
+        if self.coupon:
+            url += f'?couponCode={self.coupon}'
+
+        return url
+
     @classmethod
     def from_url(cls: type[Self], url: str) -> Self | None:
         """Create a new Udemy Course from its URL.

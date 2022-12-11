@@ -96,11 +96,9 @@ class UdemyDriver:
             _printer.error('An error occurred while enrolling, skipping course')
 
     def _enroll(self, course: UdemyCourse) -> None:
-        url = f'https://www.udemy.com/course/{course.url_id}/?couponCode={course.coupon}'
+        _debug.debug('Enrolling in %s', course.url)
 
-        _debug.debug('Enrolling in %s', url)
-
-        self.driver.get(url)
+        self.driver.get(course.url)
         enroll_button_selector = '[data-purpose*="buy-this-course-button"]'
 
         if not self._course_is_available(enroll_button_selector):
