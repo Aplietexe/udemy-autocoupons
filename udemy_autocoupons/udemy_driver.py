@@ -102,20 +102,20 @@ class UdemyDriver:
         enroll_button_selector = '[data-purpose*="buy-this-course-button"]'
 
         if not self._course_is_available(enroll_button_selector):
-            _debug.debug('_course_is_available returned False')
+            _debug.debug('_course_is_available failed for %s', course.url)
             return
 
         # The previous check guarantees that the button will show
         enroll_button = self._wait_for_clickable(enroll_button_selector)
 
         if not self._current_course_is_discounted():
-            _debug.debug('_course_is_discounted returned False')
+            _debug.debug('_course_is_discounted failed for %s', course.url)
             return
 
         enroll_button.click()
 
         if not self._checkout_is_correct():
-            _debug.debug('_checkout_is_correct returned False')
+            _debug.error('_checkout_is_correct failed for %s', course.url)
             return
 
         checkout_button = self._wait_for_clickable(
