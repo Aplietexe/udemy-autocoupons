@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 from asyncio import Queue as AsyncQueue, create_task
+from logging import getLogger
 from multiprocessing import JoinableQueue as MpQueue
 
 from udemy_autocoupons.udemy_course import UdemyCourse
+
+_debug = getLogger('debug')
 
 
 class QueueManager:
@@ -42,20 +45,32 @@ class QueueManager:
             A tuple containing the async and multiprocessing queues.
 
         """
+        _debug.debug('Entered QueueManager context manager')
         return (self.async_queue, self.mp_queue)
 
     async def __aexit__(self, *_) -> None:
         """Closes and waits the async and multiprocessing queue."""
         await self.async_queue.put(None)
+        _debug.debug('Waiting async queue')
         await self.async_queue.join()
+
+        _debug.debug('Waiting _process_courses task')
         await self._task
 
         self.mp_queue.put(None)
+        _debug.debug('Waiting multiprocessing queue')
         self.mp_queue.join()
+
+        _debug.debug('Exiting QueueManager context manager')
 
     async def _process_courses(self) -> None:
         while url := await self.async_queue.get():
-            if (crs := UdemyCourse.from_url(url)) and crs not in self._seen:
-                self.mp_queue.put(crs)
+            if course := UdemyCourse.from_url(url):
+                if course not in self._seen:
+                    self.mp_queue.put(course)
+                else:
+                    _debug.debug('Ignoring duplicate course %s', course)
             self.async_queue.task_done()
+
+        _debug.debug('Got None in async queue')
         self.async_queue.task_done()
