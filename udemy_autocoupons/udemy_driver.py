@@ -195,7 +195,7 @@ class UdemyDriver:
         return (
             not self._find_elements(purchased_selector) and
             not self._find_elements(free_badge_selector) and
-            '$' not in self._find_elements(price_selector)[0].text
+            '$' not in self._wait_for(price_selector).text
         )
 
     def _checkout_is_correct(self) -> bool:
