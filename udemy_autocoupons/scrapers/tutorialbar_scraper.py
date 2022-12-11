@@ -1,6 +1,7 @@
 """This module contains the TutoralbarScraper scraper."""
 import asyncio
 from asyncio import Queue as AsyncQueue
+from logging import getLogger
 from typing import TypedDict
 
 from aiohttp import ClientSession
@@ -21,6 +22,10 @@ class _PostT(TypedDict):
     acf: _AcfT
 
 
+_printer = getLogger('printer')
+_debug = getLogger('debug')
+
+
 class TutoralbarScraper(Scraper):
     """Handles tutorialbar.com scraping."""
     _WAIT = 1
@@ -39,22 +44,32 @@ class TutoralbarScraper(Scraper):
         self._queue = queue
         self._client = client
         self._persistent_data = persistent_data
+        _debug.debug('Loaded persistent data %s', persistent_data)
 
         self._new_last_date: str | None = None
 
     async def scrap(self) -> None:
         """Starts scraping courses and sending them to the queue manager."""
+        _debug.debug('Start scraping')
         offset = 0
 
         while courses := await self._request_courses(offset):
+            _printer.info('Got %s courses from tutorialbar.com.', len(courses))
+            _debug.debug('Sending %s courses to async queue', len(courses))
+
             for course in courses:
                 await self._queue.put(course)
 
             if len(courses) != 100:
+                _debug.debug(
+                    'Stopping scraper because only %s courses were received',
+                    len(courses),
+                )
                 break
 
             await asyncio.sleep(self._WAIT)
             offset += 100
+        _debug.debug('Finishing scraper, last courses value was %s', courses)
 
     def create_persistent_data(self) -> _PersistentData | None:
         """Returns the publish date of most recent URL.
@@ -67,9 +82,17 @@ class TutoralbarScraper(Scraper):
           previous persistent data otherwise.
 
         """
-        return {
+        persistent_data: _PersistentData | None = {
             'last_date': self._new_last_date,
-        } if self._new_last_date else self._persistent_data
+        } if self._new_last_date else None
+
+        _debug.debug(
+            'Returning persistent data %s because self._new_last_date is %s',
+            persistent_data,
+            self._new_last_date,
+        )
+
+        return persistent_data
 
     async def _request_courses(self, offset: int) -> list[str] | None:
         """Sends a request with the given offset.
@@ -91,11 +114,21 @@ class TutoralbarScraper(Scraper):
             after = self._persistent_data['last_date']
             url += f'&after={after}'
 
+        _debug.debug('Sending request to %s', url)
+
         attempts = 0
 
         while attempts < self._MAX_ATTEMPTS:
             async with self._client.get(url) as res:
                 if res.status != self._CODE_OK:
+                    _debug.debug(
+                        'Got code %s from %s. attempts == %s. Reattempting in %s',
+                        res.status,
+                        url,
+                        attempts,
+                        self._LONG_WAIT,
+                    )
+
                     attempts += 1
                     await asyncio.sleep(self._LONG_WAIT)
                     continue
@@ -104,5 +137,22 @@ class TutoralbarScraper(Scraper):
 
                 if json_res:  # pylint: disable=consider-using-assignment-expr
                     self._new_last_date = json_res[-1]['date']
+                    _debug.debug(
+                        'Reassigning self._new_last_date to %s',
+                        self._new_last_date,
+                    )
 
-                return [post['acf']['course_url'] for post in json_res]
+                courses = None
+
+                try:
+                    courses = [post['acf']['course_url'] for post in json_res]
+                except (KeyError, TypeError):
+                    _debug.exception(
+                        'JSON response does not follow the expected format. Response was %s',
+                        json_res,
+                    )
+                    _printer.error(
+                        'Error extracting course urls from tutorialbar. Check logs.',
+                    )
+
+                return courses
