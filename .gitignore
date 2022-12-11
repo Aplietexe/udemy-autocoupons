@@ -2,3 +2,4 @@
 .venv
 .dccache
 __pycache__
+*.log
