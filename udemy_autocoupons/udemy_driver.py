@@ -5,13 +5,12 @@ from collections.abc import Callable
 from logging import getLogger
 from multiprocessing import JoinableQueue as MpQueue
 
-import undetected_chromedriver as uc
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
 from selenium.webdriver.support.wait import WebDriverWait
-from undetected_chromedriver import Chrome
+from undetected_chromedriver import Chrome, ChromeOptions
 
 from udemy_autocoupons.constants import (
     PROFILE_DIRECTORY,
@@ -35,7 +34,7 @@ class UdemyDriver:
 
     def __init__(self) -> None:
         """Starts the driver."""
-        options = uc.ChromeOptions()
+        options = ChromeOptions()
         options.add_argument('--start-maximized')
 
         options.add_argument(f'--profile-directory={PROFILE_DIRECTORY}')
@@ -47,7 +46,7 @@ class UdemyDriver:
             USER_DATA_DIR,
         )
 
-        self.driver = uc.Chrome(options=options)
+        self.driver = Chrome(options=options)
 
         _debug.debug('Started WebDriver')
 
