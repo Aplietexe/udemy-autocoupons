@@ -58,7 +58,10 @@ class TutoralbarScraper(Scraper):
             _debug.debug('Sending %s urls to async queue', len(urls))
 
             for url in urls:
-                await self._queue.put(url)
+                if 'udemy' in url:
+                    await self._queue.put(url)
+                else:
+                    _debug.debug('%s is not a udemy url', url)
 
             if len(urls) != 100:
                 _debug.debug(
