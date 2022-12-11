@@ -1,7 +1,10 @@
 """This module contains the UdemyCourse class."""
 from dataclasses import dataclass
+from logging import getLogger
 from typing import Self
 from urllib.parse import parse_qs, urlparse
+
+_debug = getLogger('debug')
 
 
 @dataclass(frozen=True)
@@ -34,6 +37,7 @@ class UdemyCourse:
         query_params = parse_qs(parsed.query, strict_parsing=True)
 
         if not cls._verify(parsed.netloc, parsed.path):
+            _debug.debug('%s cannot be parsed as a Udemy course', url)
             return None
 
         # 0 is '', 1 is 'course', 2 is the url_id
