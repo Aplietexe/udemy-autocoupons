@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from asyncio import TaskGroup, run
+from logging import getLogger
 from multiprocessing import JoinableQueue as MpQueue
 from multiprocessing import Process
 
@@ -34,11 +35,17 @@ async def main() -> None:
     process uses a WebDriver to enroll in all provided courses.
 
     """
+    debug = getLogger('debug')
     # Listen for urls in the async queue
     async with QueueManager() as (async_queue, mp_queue):
         # Listen for courses in the multiprocessing queue
-        process = Process(target=_run_driver, args=(mp_queue,))
+        process = Process(
+            target=_run_driver,
+            args=(mp_queue,),
+            name='UdemyDriverProcess',
+        )
         process.start()
+        debug.debug('UdemyDriverProcess started')
 
         async with ClientSession() as client:
             async with TaskGroup() as task_group:
@@ -50,10 +57,11 @@ async def main() -> None:
                         None,
                     )
                     task_group.create_task(scraper.scrap())
-
-            # Wait for scrappers to finish
+            # Wait for scrapers to finish
+            debug.debug('All scrapers finished')
     # Wait for queues to finish
     # Wait for process to finish
+    debug.debug('Waiting for process to finish')
     process.join()
 
 
