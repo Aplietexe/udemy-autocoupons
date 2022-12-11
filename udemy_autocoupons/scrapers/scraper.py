@@ -22,7 +22,7 @@ class Scraper(ABC, Generic[_PersistentT]):
         """The initialization should have no side effects.
 
         Args:
-          queue: The async queue where the scraped courses should be added.
+          queue: The async queue where the scraped urls should be added.
           client: The aiohttp client that the scraper should use.
           persistent_data: Persistent data previously returned by the scraper.
 

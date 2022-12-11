@@ -49,27 +49,27 @@ class TutoralbarScraper(Scraper):
         self._new_last_date: str | None = None
 
     async def scrap(self) -> None:
-        """Starts scraping courses and sending them to the queue manager."""
+        """Starts scraping urls and sending them to the queue manager."""
         _debug.debug('Start scraping')
         offset = 0
 
-        while courses := await self._request_courses(offset):
-            _printer.info('Got %s courses from tutorialbar.com.', len(courses))
-            _debug.debug('Sending %s courses to async queue', len(courses))
+        while urls := await self._request(offset):
+            _printer.info('Got %s urls from tutorialbar.com.', len(urls))
+            _debug.debug('Sending %s urls to async queue', len(urls))
 
-            for course in courses:
-                await self._queue.put(course)
+            for url in urls:
+                await self._queue.put(url)
 
-            if len(courses) != 100:
+            if len(urls) != 100:
                 _debug.debug(
-                    'Stopping scraper because only %s courses were received',
-                    len(courses),
+                    'Stopping scraper because only %s urls were received',
+                    len(urls),
                 )
                 break
 
             await asyncio.sleep(self._WAIT)
             offset += 100
-        _debug.debug('Finishing scraper, last courses value was %s', courses)
+        _debug.debug('Finishing scraper, last urls value was %s', urls)
 
     def create_persistent_data(self) -> _PersistentData | None:
         """Returns the publish date of most recent URL.
@@ -94,11 +94,11 @@ class TutoralbarScraper(Scraper):
 
         return persistent_data
 
-    async def _request_courses(self, offset: int) -> list[str] | None:
+    async def _request(self, offset: int) -> list[str] | None:
         """Sends a request with the given offset.
 
         It can resend the request several times if it keeps failing.
-        When courses are obtained correctly, _new_last_date is updated.
+        When urls are obtained correctly, _new_last_date is updated.
 
         Args:
             offset: The offset to use for the request.
@@ -142,10 +142,10 @@ class TutoralbarScraper(Scraper):
                         self._new_last_date,
                     )
 
-                courses = None
+                urls = None
 
                 try:
-                    courses = [post['acf']['course_url'] for post in json_res]
+                    urls = [post['acf']['course_url'] for post in json_res]
                 except (KeyError, TypeError):
                     _debug.exception(
                         'JSON response does not follow the expected format. Response was %s',
@@ -155,4 +155,4 @@ class TutoralbarScraper(Scraper):
                         'Error extracting course urls from tutorialbar. Check logs.',
                     )
 
-                return courses
+                return urls
