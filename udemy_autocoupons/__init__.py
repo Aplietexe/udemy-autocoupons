@@ -1,1 +1,1 @@
-"""Allows to enroll automatically in a given udemy course."""
+"""Scraps udemy courses and enrolls in them."""

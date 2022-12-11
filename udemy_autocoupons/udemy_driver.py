@@ -1,5 +1,8 @@
 """This module contains the UdemyDriver class."""
+from __future__ import annotations
+
 from collections.abc import Callable
+from multiprocessing import JoinableQueue as MpQueue
 
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
@@ -40,6 +43,22 @@ class UdemyDriver:
             WAIT_TIMEOUT,
             WAIT_POLL_FREQUENCY,
         )
+
+    def enroll_from_queue(self, mp_queue: MpQueue[UdemyCourse | None]) -> None:  # pylint: disable=unsubscriptable-object
+        """Enrolls in all courses in a queue.
+
+        When a None is received from the queue, it is considered that there
+        won't be any more courses.
+
+        Args:
+            mp_queue: A multiprocessing queue with courses.
+
+        """
+        while course := mp_queue.get():
+            self.enroll(course)
+            mp_queue.task_done()
+
+        mp_queue.task_done()
 
     def enroll(self, course: UdemyCourse) -> None:
         """If the course is discounted, it enrolls the account in it.
