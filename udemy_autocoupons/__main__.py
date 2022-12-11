@@ -22,6 +22,7 @@ def _run_driver(mp_queue: MpQueue[UdemyCourse | None]) -> None:  # pylint: disab
     """
     driver = UdemyDriver()
     driver.enroll_from_queue(mp_queue)
+    driver.quit()
 
 
 async def main() -> None:

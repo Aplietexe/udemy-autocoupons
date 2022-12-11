@@ -91,6 +91,10 @@ class UdemyDriver:
 
         self._wait.until(lambda driver: 'checkout' not in driver.current_url)
 
+    def quit(self) -> None:
+        """Quits the WebDriver instance."""
+        self.driver.quit()
+
     def _current_course_is_discounted(self) -> bool:
         """Check if the course currently on screen is discounted.
 
