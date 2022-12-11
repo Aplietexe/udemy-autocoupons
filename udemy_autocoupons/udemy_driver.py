@@ -101,11 +101,14 @@ class UdemyDriver:
         _debug.debug('Enrolling in %s', url)
 
         self.driver.get(url)
+        enroll_button_selector = '[data-purpose*="buy-this-course-button"]'
 
-        # This shows even if the course is not discounted, so it's a safe wait
-        enroll_button = self._wait_for_clickable(
-            '[data-purpose*="buy-this-course-button"]',
-        )
+        if not self._course_is_available(enroll_button_selector):
+            _debug.debug('_course_is_available returned False')
+            return
+
+        # The previous check guarantees that the button will show
+        enroll_button = self._wait_for_clickable(enroll_button_selector)
 
         if not self._current_course_is_discounted():
             _debug.debug('_course_is_discounted returned False')
@@ -127,6 +130,45 @@ class UdemyDriver:
     def quit(self) -> None:
         """Quits the WebDriver instance."""
         self.driver.quit()
+
+    def _course_is_available(self, enroll_button_selector: str) -> bool:
+        """Check if the current course on screen is available.
+
+        The detection looks for either a redirect to a /topic/ route, to /, a
+        banner indicating that the course is unavailable a 404 error banner, a
+        private course button or the enroll button. Only in the last case the
+        course is available.
+
+        Args:
+          enroll_button_selector: The CSS selector of the enroll button, which
+          shows only if the course is available.
+
+        Returns:
+           True if the current course is available, False otherwise
+
+        """
+        unavailable_selector = '[class*="limited-access-container--content"]'
+        banner404_selector = '.error__container'
+        private_button_selector = '[class*="course-landing-page-private"]'
+
+        self._wait.until(
+            EC.any_of(
+                EC.url_contains('/topic/'),
+                EC.url_to_be('https://www.udemy.com/'),
+                self._ec_located(unavailable_selector),
+                self._ec_located(banner404_selector),
+                self._ec_located(enroll_button_selector),
+                self._ec_located(private_button_selector),
+            ),
+        )
+
+        return (
+            '/topic/' not in self.driver.current_url and
+            self.driver.current_url != 'https://www.udemy.com/' and
+            not self._find_elements(unavailable_selector) and
+            not self._find_elements(banner404_selector) and
+            not self._find_elements(private_button_selector)
+        )
 
     def _current_course_is_discounted(self) -> bool:
         """Check if the course currently on screen is discounted.
