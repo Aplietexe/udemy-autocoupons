@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from logging import getLogger
 from multiprocessing import JoinableQueue as MpQueue
 
 import undetected_chromedriver as uc
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
@@ -18,6 +20,9 @@ from udemy_autocoupons.constants import (
     WAIT_TIMEOUT,
 )
 from udemy_autocoupons.udemy_course import UdemyCourse
+
+_printer = getLogger('printer')
+_debug = getLogger('debug')
 
 
 class UdemyDriver:
@@ -36,7 +41,15 @@ class UdemyDriver:
         options.add_argument(f'--profile-directory={PROFILE_DIRECTORY}')
         options.add_argument(f'user-data-dir={USER_DATA_DIR}')
 
+        _debug.debug(
+            'Starting WebDriver with --profile-directory %s and user-data-dir %s',
+            PROFILE_DIRECTORY,
+            USER_DATA_DIR,
+        )
+
         self.driver = uc.Chrome(options=options)
+
+        _debug.debug('Started WebDriver')
 
         self._wait = WebDriverWait(
             self.driver,
@@ -56,7 +69,14 @@ class UdemyDriver:
         """
         while course := mp_queue.get():
             self.enroll(course)
+
+            qsize = mp_queue.qsize()
+            _printer.info('%s courses left.', qsize)
+            _debug.debug('Enroll finished for %s. qsize is %s', course, qsize)
+
             mp_queue.task_done()
+
+        _debug.debug('Got None in multiprocessing queue')
 
         mp_queue.task_done()
 
@@ -67,7 +87,19 @@ class UdemyDriver:
             course: The course to enroll in.
 
         """
+        try:
+            self._enroll(course)
+        except WebDriverException:
+            _debug.exception(
+                'A WebDriverException was encountered while enrolling in %s',
+                course,
+            )
+            _printer.error('An error occurred while enrolling, skipping course')
+
+    def _enroll(self, course: UdemyCourse) -> None:
         url = f'https://www.udemy.com/course/{course.url_id}/?couponCode={course.coupon}'
+
+        _debug.debug('Enrolling in %s', url)
 
         self.driver.get(url)
 
@@ -77,11 +109,13 @@ class UdemyDriver:
         )
 
         if not self._current_course_is_discounted():
+            _debug.debug('_course_is_discounted returned False')
             return
 
         enroll_button.click()
 
         if not self._checkout_is_correct():
+            _debug.debug('_checkout_is_correct returned False')
             return
 
         checkout_button = self._wait_for_clickable(
