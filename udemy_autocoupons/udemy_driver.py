@@ -132,8 +132,8 @@ class UdemyDriver:
     def _course_is_available(self, enroll_button_selector: str) -> bool:
         """Check if the current course on screen is available.
 
-        The detection looks for either a redirect to a /topic/ route, to /, a
-        banner indicating that the course is unavailable a 404 error banner, a
+        The detection looks for either a redirect to a blacklisted route, to /,
+        a banner indicating that the course is unavailable a 404 error banner, a
         private course button or the enroll button. Only in the last case the
         course is available.
 
@@ -145,13 +145,14 @@ class UdemyDriver:
            True if the current course is available, False otherwise
 
         """
+        blacklist = ('/topic/', '/it-and-software/it-certification/')
         unavailable_selector = '[class*="limited-access-container--content"]'
         banner404_selector = '.error__container'
         private_button_selector = '[class*="course-landing-page-private"]'
 
         self._wait.until(
             EC.any_of(
-                EC.url_contains('/topic/'),
+                *(EC.url_contains(blacklisted) for blacklisted in blacklist),
                 EC.url_to_be('https://www.udemy.com/'),
                 self._ec_located(unavailable_selector),
                 self._ec_located(banner404_selector),
@@ -161,8 +162,10 @@ class UdemyDriver:
         )
 
         return (
-            '/topic/' not in self.driver.current_url and
-            self.driver.current_url != 'https://www.udemy.com/' and
+            all(
+                blacklisted not in self.driver.current_url
+                for blacklisted in blacklist
+            ) and self.driver.current_url != 'https://www.udemy.com/' and
             not self._find_elements(unavailable_selector) and
             not self._find_elements(banner404_selector) and
             not self._find_elements(private_button_selector)
