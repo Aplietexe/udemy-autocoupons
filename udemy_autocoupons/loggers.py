@@ -24,7 +24,10 @@ def create_logger(
         name: The name of the logger.
         level: The logging level.
         handler: The handler for the logger to use.
-        format_str: The format string to use
+        format_str: The format string to use.
+
+    Returns:
+        The created logger.
 
     """
     logger = getLogger(name)

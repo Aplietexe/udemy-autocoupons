@@ -40,7 +40,14 @@ class TutoralbarScraper(Scraper):
         client: ClientSession,
         persistent_data: _PersistentData | None,
     ) -> None:
-        """Stores provided manager, client and persistent data."""
+        """Stores provided manager, client and persistent data.
+
+        Args:
+          queue: An async queue where the urls will be added.
+          client: An aiohttp client to use.
+          persistent_data: The persistent data previously returned.
+
+        """
         self._queue = queue
         self._client = client
         self._persistent_data = persistent_data

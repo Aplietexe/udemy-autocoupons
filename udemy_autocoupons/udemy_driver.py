@@ -51,6 +51,9 @@ class UdemyDriver:
     Requires the profile set in PROFILE_DIRECTORY in USER_DATA_DIR to already be
     logged into the Udemy Account.
 
+    Attributes:
+        driver: The instance of UndetectedChromeDriver in use.
+
     """
 
     _ENROLL_BUTTON_SELECTOR = '[data-purpose*="buy-this-course-button"]'
@@ -165,8 +168,8 @@ class UdemyDriver:
         """Check if the current course on screen is available.
 
         The detection looks for either a redirect to a blacklisted route, to /,
-        a banner indicating that the course is unavailable a 404 error banner, a
-        private course button or the enroll button. Only in the last case the
+        a banner indicating that the course is unavailable, a 404 error banner,
+        a private course button or the enroll button. Only in the last case the
         course is available.
 
         Args:
@@ -174,7 +177,7 @@ class UdemyDriver:
           shows only if the course is available.
 
         Returns:
-           True if the current course is available, False otherwise
+           True if the current course is available, False otherwise.
 
         """
         blacklist = ('/topic/', '/it-and-software/it-certification/')
@@ -273,19 +276,67 @@ class UdemyDriver:
         ) else State.FREE
 
     def _wait_for(self, css_selector: str) -> WebElement:
+        """Waits until the element with the given CSS selector is located.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            The element once it's found.
+
+        """
         return self._wait.until(self._ec_located(css_selector))
 
     def _wait_for_clickable(self, css_selector: str) -> WebElement:
+        """Waits until the element with the given CSS selector is clickable.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            The element once it's clickable.
+
+        """
         return self._wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, css_selector)),
         )
 
     def _find(self, css_selector: str) -> WebElement:
+        """Finds without waiting the element with the given CSS selector.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            The element.
+
+        Raises:
+            NoSuchElementException: If the element is not found.
+
+        """
         return self.driver.find_element(By.CSS_SELECTOR, css_selector)
 
     def _find_elements(self, css_selector: str) -> list[WebElement]:
+        """Finds without waiting the elements with the given CSS selector.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            A list of elements, which can be empty if no elements were found.
+
+        """
         return self.driver.find_elements(By.CSS_SELECTOR, css_selector)
 
     @staticmethod
     def _ec_located(css_selector: str) -> Callable[[Chrome], WebElement]:
+        """Creates an expected condition for locating the given selector.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            An expected condition which returns the found element.
+
+        """
         return EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
