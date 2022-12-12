@@ -32,6 +32,8 @@ class UdemyDriver:
 
     """
 
+    _ENROLL_BUTTON_SELECTOR = '[data-purpose*="buy-this-course-button"]'
+
     def __init__(self) -> None:
         """Starts the driver."""
         options = ChromeOptions()
@@ -99,14 +101,13 @@ class UdemyDriver:
         _debug.debug('Enrolling in %s', course.url)
 
         self.driver.get(course.url)
-        enroll_button_selector = '[data-purpose*="buy-this-course-button"]'
 
-        if not self._course_is_available(enroll_button_selector):
+        if not self._course_is_available():
             _debug.debug('_course_is_available failed for %s', course.url)
             return
 
         # The previous check guarantees that the button will show
-        enroll_button = self._wait_for_clickable(enroll_button_selector)
+        enroll_button = self._wait_for_clickable(self._ENROLL_BUTTON_SELECTOR)
 
         if not self._current_course_is_discounted():
             _debug.debug('_course_is_discounted failed for %s', course.url)
@@ -129,7 +130,7 @@ class UdemyDriver:
         """Quits the WebDriver instance."""
         self.driver.quit()
 
-    def _course_is_available(self, enroll_button_selector: str) -> bool:
+    def _course_is_available(self) -> bool:
         """Check if the current course on screen is available.
 
         The detection looks for either a redirect to a blacklisted route, to /,
@@ -156,7 +157,7 @@ class UdemyDriver:
                 EC.url_to_be('https://www.udemy.com/'),
                 self._ec_located(unavailable_selector),
                 self._ec_located(banner404_selector),
-                self._ec_located(enroll_button_selector),
+                self._ec_located(self._ENROLL_BUTTON_SELECTOR),
                 self._ec_located(private_button_selector),
             ),
         )
