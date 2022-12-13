@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from logging import getLogger
+from multiprocessing import JoinableQueue as MpQueue
 from typing import Literal
 
 from selenium.common.exceptions import WebDriverException
@@ -19,7 +20,7 @@ from udemy_autocoupons.constants import (
     WAIT_TIMEOUT,
 )
 from udemy_autocoupons.enroller.state import DoneOrErrorT, DoneT, State
-from udemy_autocoupons.udemy_course import CourseWithCoupon
+from udemy_autocoupons.udemy_course import UdemyCourse
 
 _printer = getLogger('printer')
 _debug = getLogger('debug')
@@ -62,11 +63,30 @@ class UdemyDriver:
             WAIT_POLL_FREQUENCY,
         )
 
-    def quit(self) -> None:
-        """Quits the WebDriver instance."""
-        self.driver.quit()
+    def enroll_from_queue(self, mp_queue: MpQueue[UdemyCourse | None]) -> None:  # pylint: disable=unsubscriptable-object
+        """Enrolls in all courses in a queue.
 
-    def enroll(self, course: CourseWithCoupon) -> DoneOrErrorT:
+        When a None is received from the queue, it is considered that there
+        won't be any more courses.
+
+        Args:
+            mp_queue: A multiprocessing queue with courses.
+
+        """
+        while course := mp_queue.get():
+            self.enroll(course)
+
+            qsize = mp_queue.qsize()
+            _printer.info('%s courses left.', qsize)
+            _debug.debug('Enroll finished for %s. qsize is %s', course, qsize)
+
+            mp_queue.task_done()
+
+        _debug.debug('Got None in multiprocessing queue')
+
+        mp_queue.task_done()
+
+    def enroll(self, course: UdemyCourse) -> DoneOrErrorT:
         """If the course is discounted, it enrolls the account in it.
 
         Args:
@@ -83,10 +103,10 @@ class UdemyDriver:
                 'A WebDriverException was encountered while enrolling in %s',
                 course,
             )
-            _printer.error('Enroller: An error occurred while enrolling.')
+            _printer.error('An error occurred while enrolling, skipping course')
             return State.ERROR
 
-    def _enroll(self, course: CourseWithCoupon) -> DoneT:
+    def _enroll(self, course: UdemyCourse) -> DoneT:
         _debug.debug('Enrolling in %s', course.url)
 
         self.driver.get(course.url)
@@ -121,10 +141,14 @@ class UdemyDriver:
         self._wait.until(lambda driver: 'checkout' not in driver.current_url)
         return State.ENROLLED
 
+    def quit(self) -> None:
+        """Quits the WebDriver instance."""
+        self.driver.quit()
+
     def _course_is_available(self) -> bool:
         """Check if the current course on screen is available.
 
-        The detection looks for either a redirect to a more general route, to /,
+        The detection looks for either a redirect to a blacklisted route, to /,
         a banner indicating that the course is unavailable, a 404 error banner,
         a private course button or the enroll button. Only in the last case the
         course is available.
@@ -133,14 +157,14 @@ class UdemyDriver:
            True if the current course is available, False otherwise.
 
         """
+        blacklist = ('/topic/', '/it-and-software/it-certification/')
         unavailable_selector = '[class*="limited-access-container--content"]'
         banner404_selector = '.error__container'
         private_button_selector = '[class*="course-landing-page-private"]'
 
         self._wait.until(
             EC.any_of(
-                EC.url_contains('/topic/'),
-                EC.url_contains('/courses/'),
+                *(EC.url_contains(blacklisted) for blacklisted in blacklist),
                 EC.url_to_be('https://www.udemy.com/'),
                 self._ec_located(unavailable_selector),
                 self._ec_located(banner404_selector),
@@ -149,24 +173,14 @@ class UdemyDriver:
             ),
         )
 
-        unavailable_elements = self._find_elements(unavailable_selector)
-        banner404_elements = self._find_elements(banner404_selector)
-        private_button_elements = self._find_elements(private_button_selector)
-
-        _debug.debug(
-            'Url: %s; unavailable: %s; banner404: %s; private_button: %s',
-            self.driver.current_url,
-            unavailable_elements,
-            banner404_elements,
-            private_button_elements,
-        )
-
         return (
-            '/topic/' not in self.driver.current_url and
-            '/courses/' not in self.driver.current_url and
-            self.driver.current_url != 'https://www.udemy.com/' and
-            not unavailable_elements and not banner404_elements and
-            not private_button_elements
+            all(
+                blacklisted not in self.driver.current_url
+                for blacklisted in blacklist
+            ) and self.driver.current_url != 'https://www.udemy.com/' and
+            not self._find_elements(unavailable_selector) and
+            not self._find_elements(banner404_selector) and
+            not self._find_elements(private_button_selector)
         )
 
     def _get_course_state(
@@ -191,19 +205,9 @@ class UdemyDriver:
         )
 
         if self._find_elements(purchased_selector):
-            _debug.debug(
-                'Found purchased_selector in %s',
-                self.driver.current_url,
-            )
-
             return State.IN_ACCOUNT
 
         if self._find_elements(free_badge_selector):
-            _debug.debug(
-                'Found free_badge_selector in %s',
-                self.driver.current_url,
-            )
-
             return State.FREE
 
         # Wait first so that we can then use find_element instead of nesting waits
@@ -214,8 +218,6 @@ class UdemyDriver:
             lambda driver: driver.find_element(By.CSS_SELECTOR, price_selector).
             text,
         )
-
-        _debug.debug('price_text is %s', price_text)
 
         return State.PAID if '$' in price_text else State.ENROLLABLE
 
@@ -240,20 +242,14 @@ class UdemyDriver:
             ),
         )
 
-        _debug.debug('Url is %s', self.driver.current_url)
-
         if '/learn/lecture/' in self.driver.current_url:
             return State.IN_ACCOUNT
 
         if '/cart/subscribe/course/' in self.driver.current_url:
             return State.FREE
 
-        total_amount_text = self._wait_for(total_amount_locator).text
-
-        _debug.debug('Total amount text is %s', total_amount_text)
-
         return State.ENROLLABLE if (
-            total_amount_text.startswith('0')
+            self._wait_for(total_amount_locator).text.startswith('0')
         ) else State.FREE
 
     def _wait_for(self, css_selector: str) -> WebElement:

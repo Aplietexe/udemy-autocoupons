@@ -8,11 +8,11 @@ from multiprocessing import Process
 
 from aiohttp import ClientSession
 
+from udemy_autocoupons.enroller.udemy_driver import UdemyDriver
 from udemy_autocoupons.loggers import setup_loggers
 from udemy_autocoupons.queue_manager import QueueManager
 from udemy_autocoupons.scrapers import scraper_types
 from udemy_autocoupons.udemy_course import UdemyCourse
-from udemy_autocoupons.udemy_driver import UdemyDriver
 
 
 def _run_driver(mp_queue: MpQueue[UdemyCourse | None]) -> None:  # pylint: disable=unsubscriptable-object
