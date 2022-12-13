@@ -3,3 +3,4 @@
 .dccache
 __pycache__
 *.log
+data
