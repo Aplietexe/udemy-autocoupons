@@ -149,14 +149,25 @@ class UdemyDriver:
             ),
         )
 
+        unavailable_elements = self._find_elements(unavailable_selector)
+        banner404_elements = self._find_elements(banner404_selector)
+        private_button_elements = self._find_elements(private_button_selector)
+
+        _debug.debug(
+            'Url: %s; unavailable: %s; banner404: %s; private_button: %s',
+            self.driver.current_url,
+            unavailable_elements,
+            banner404_elements,
+            private_button_elements,
+        )
+
         return (
             all(
                 blacklisted not in self.driver.current_url
                 for blacklisted in blacklist
             ) and self.driver.current_url != 'https://www.udemy.com/' and
-            not self._find_elements(unavailable_selector) and
-            not self._find_elements(banner404_selector) and
-            not self._find_elements(private_button_selector)
+            not unavailable_elements and not banner404_elements and
+            not private_button_elements
         )
 
     def _get_course_state(
@@ -181,9 +192,19 @@ class UdemyDriver:
         )
 
         if self._find_elements(purchased_selector):
+            _debug.debug(
+                'Found purchased_selector in %s',
+                self.driver.current_url,
+            )
+
             return State.IN_ACCOUNT
 
         if self._find_elements(free_badge_selector):
+            _debug.debug(
+                'Found free_badge_selector in %s',
+                self.driver.current_url,
+            )
+
             return State.FREE
 
         # Wait first so that we can then use find_element instead of nesting waits
@@ -194,6 +215,8 @@ class UdemyDriver:
             lambda driver: driver.find_element(By.CSS_SELECTOR, price_selector).
             text,
         )
+
+        _debug.debug('price_text is %s', price_text)
 
         return State.PAID if '$' in price_text else State.ENROLLABLE
 
@@ -218,14 +241,20 @@ class UdemyDriver:
             ),
         )
 
+        _debug.debug('Url is %s', self.driver.current_url)
+
         if '/learn/lecture/' in self.driver.current_url:
             return State.IN_ACCOUNT
 
         if '/cart/subscribe/course/' in self.driver.current_url:
             return State.FREE
 
+        total_amount_text = self._wait_for(total_amount_locator).text
+
+        _debug.debug('Total amount text is %s', total_amount_text)
+
         return State.ENROLLABLE if (
-            self._wait_for(total_amount_locator).text.startswith('0')
+            total_amount_text.startswith('0')
         ) else State.FREE
 
     def _wait_for(self, css_selector: str) -> WebElement:
