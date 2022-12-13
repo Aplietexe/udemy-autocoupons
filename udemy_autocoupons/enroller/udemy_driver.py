@@ -63,6 +63,10 @@ class UdemyDriver:
             WAIT_POLL_FREQUENCY,
         )
 
+    def quit(self) -> None:
+        """Quits the WebDriver instance."""
+        self.driver.quit()
+
     def enroll_from_queue(
         self,
         mp_queue: MpQueue[CourseWithCoupon | None],  # pylint: disable=unsubscriptable-object
@@ -143,10 +147,6 @@ class UdemyDriver:
 
         self._wait.until(lambda driver: 'checkout' not in driver.current_url)
         return State.ENROLLED
-
-    def quit(self) -> None:
-        """Quits the WebDriver instance."""
-        self.driver.quit()
 
     def _course_is_available(self) -> bool:
         """Check if the current course on screen is available.
