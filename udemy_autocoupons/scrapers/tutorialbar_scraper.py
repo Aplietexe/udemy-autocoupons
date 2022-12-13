@@ -60,15 +60,11 @@ class TutoralbarScraper(Scraper):
         _debug.debug('Start scraping')
         offset = 0
 
-        while urls := await self._request(offset):
+        while urls := await self._request(self._generate_url(offset)):
             _printer.info('Got %s urls from tutorialbar.com.', len(urls))
             _debug.debug('Sending %s urls to async queue', len(urls))
 
-            for url in urls:
-                if 'udemy' in url:
-                    await self._queue.put(url)
-                else:
-                    _debug.debug('%s is not a udemy url', url)
+            await self._enqueue_urls(urls)
 
             if len(urls) != 100:
                 _debug.debug(
@@ -104,14 +100,14 @@ class TutoralbarScraper(Scraper):
 
         return persistent_data
 
-    async def _request(self, offset: int) -> list[str] | None:
+    async def _request(self, url: str) -> list[str] | None:
         """Sends a request with the given offset.
 
         It can resend the request several times if it keeps failing.
         When urls are obtained correctly, _new_last_date is updated.
 
         Args:
-            offset: The offset to use for the request.
+            url: The url to send the request to.
 
         Returns:
             A list of up to 100 udemy course urls if the request was successful.
@@ -119,13 +115,6 @@ class TutoralbarScraper(Scraper):
             too high.
 
         """
-        url = f'{self._BASE}&offset={offset}'
-        if self._persistent_data:
-            after = self._persistent_data['last_date']
-            url += f'&after={after}'
-
-        _debug.debug('Sending request to %s', url)
-
         attempts = 0
 
         while attempts < self._MAX_ATTEMPTS:
@@ -145,24 +134,42 @@ class TutoralbarScraper(Scraper):
 
                 json_res: list[_PostT] = await res.json()
 
-                if json_res:  # pylint: disable=consider-using-assignment-expr
-                    self._new_last_date = json_res[-1]['date']
-                    _debug.debug(
-                        'Reassigning self._new_last_date to %s',
-                        self._new_last_date,
-                    )
+            if json_res:  # pylint: disable=consider-using-assignment-expr
+                self._new_last_date = json_res[-1]['date']
+                _debug.debug(
+                    'Reassigning self._new_last_date to %s',
+                    self._new_last_date,
+                )
 
-                urls = None
+            urls = None
 
-                try:
-                    urls = [post['acf']['course_url'] for post in json_res]
-                except (KeyError, TypeError):
-                    _debug.exception(
-                        'JSON response does not follow the expected format. Response was %s',
-                        json_res,
-                    )
-                    _printer.error(
-                        'Error extracting course urls from tutorialbar. Check logs.',
-                    )
+            try:
+                urls = [post['acf']['course_url'] for post in json_res]
+            except (KeyError, TypeError):
+                _debug.exception(
+                    'JSON response does not follow the expected format. Response was %s',
+                    json_res,
+                )
+                _printer.error(
+                    'Error extracting course urls from tutorialbar. Check logs.',
+                )
 
-                return urls
+            return urls
+
+    async def _enqueue_urls(self, urls: list[str]) -> None:
+        for url in urls:
+            if 'udemy' in url:
+                await self._queue.put(url)
+            else:
+                _debug.debug('%s is not a udemy url', url)
+
+    def _generate_url(self, offset: int) -> str:
+        url = f'{self._BASE}&offset={offset}'
+
+        if self._persistent_data:
+            after = self._persistent_data['last_date']
+            url += f'&after={after}'
+
+        _debug.debug('Sending request to %s', url)
+
+        return url
