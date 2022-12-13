@@ -8,6 +8,7 @@ from multiprocessing import Process
 
 from aiohttp import ClientSession
 
+from udemy_autocoupons.enroller.enroller import Enroller, RunResult
 from udemy_autocoupons.enroller.udemy_driver import UdemyDriver
 from udemy_autocoupons.loggers import setup_loggers
 from udemy_autocoupons.queue_manager import QueueManager
@@ -15,16 +16,22 @@ from udemy_autocoupons.scrapers import scraper_types
 from udemy_autocoupons.udemy_course import CourseWithCoupon
 
 
-def _run_driver(mp_queue: MpQueue[CourseWithCoupon | None]) -> None:  # pylint: disable=unsubscriptable-object
-    """Starts a UdemyDriver and gives it the queue to enroll from it.
+def _run_driver(mp_queue: MpQueue[CourseWithCoupon | None]) -> RunResult:  # pylint: disable=unsubscriptable-object
+    """Enrolls from the queue.
 
     Args:
-        mp_queue: A multiprocessing queue to pass to the driver.
+        mp_queue: A multiprocessing queue to pass to the enroller.
+
 
     """
     driver = UdemyDriver()
-    driver.enroll_from_queue(mp_queue)
+
+    enroller = Enroller(driver, mp_queue)
+    run_result = enroller.enroll_from_queue()
+
     driver.quit()
+
+    return run_result
 
 
 async def main() -> None:

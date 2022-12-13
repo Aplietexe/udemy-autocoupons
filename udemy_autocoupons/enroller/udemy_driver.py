@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from logging import getLogger
-from multiprocessing import JoinableQueue as MpQueue
 from typing import Literal
 
 from selenium.common.exceptions import WebDriverException
@@ -66,32 +65,6 @@ class UdemyDriver:
     def quit(self) -> None:
         """Quits the WebDriver instance."""
         self.driver.quit()
-
-    def enroll_from_queue(
-        self,
-        mp_queue: MpQueue[CourseWithCoupon | None],  # pylint: disable=unsubscriptable-object
-    ) -> None:
-        """Enrolls in all courses in a queue.
-
-        When a None is received from the queue, it is considered that there
-        won't be any more courses.
-
-        Args:
-            mp_queue: A multiprocessing queue with courses.
-
-        """
-        while course := mp_queue.get():
-            self.enroll(course)
-
-            qsize = mp_queue.qsize()
-            _printer.info('%s courses left.', qsize)
-            _debug.debug('Enroll finished for %s. qsize is %s', course, qsize)
-
-            mp_queue.task_done()
-
-        _debug.debug('Got None in multiprocessing queue')
-
-        mp_queue.task_done()
 
     def enroll(self, course: CourseWithCoupon) -> DoneOrErrorT:
         """If the course is discounted, it enrolls the account in it.
