@@ -5,7 +5,7 @@ from asyncio import Queue as AsyncQueue, create_task
 from logging import getLogger
 from multiprocessing import JoinableQueue as MpQueue
 
-from udemy_autocoupons.udemy_course import UdemyCourse
+from udemy_autocoupons.udemy_course import CourseWithCoupon
 
 _debug = getLogger('debug')
 
@@ -30,15 +30,15 @@ class QueueManager:
 
     def __init__(self) -> None:
         """Creates a queue and stores it in the queue attribute."""
-        self.mp_queue: MpQueue[UdemyCourse | None] = MpQueue()  # pylint: disable=unsubscriptable-object
+        self.mp_queue: MpQueue[CourseWithCoupon | None] = MpQueue()  # pylint: disable=unsubscriptable-object
         self.async_queue: AsyncQueue[str | None] = AsyncQueue()
 
-        self._seen: set[UdemyCourse] = set()
+        self._seen: set[CourseWithCoupon] = set()
         self._task = create_task(self._process_courses())
 
     async def __aenter__(
         self,
-    ) -> tuple[AsyncQueue[str | None], MpQueue[UdemyCourse | None]]:  # pylint: disable=unsubscriptable-object
+    ) -> tuple[AsyncQueue[str | None], MpQueue[CourseWithCoupon | None]]:  # pylint: disable=unsubscriptable-object
         """Gets the queues.
 
         Returns:
@@ -65,7 +65,7 @@ class QueueManager:
 
     async def _process_courses(self) -> None:
         while url := await self.async_queue.get():
-            if course := UdemyCourse.from_url(url):
+            if course := CourseWithCoupon.from_url(url):
                 if course not in self._seen:
                     self.mp_queue.put(course)
                 else:

@@ -1,18 +1,21 @@
 """This module contains the UdemyCourse class."""
+from __future__ import annotations
+
+from abc import ABC
 from dataclasses import dataclass
 from logging import getLogger
-from typing import Self
+from typing import Literal, TypeGuard, overload
 from urllib.parse import parse_qs, urlparse
 
 _debug = getLogger('debug')
 
 
 @dataclass(frozen=True)
-class UdemyCourse:
+class _UdemyCourse(ABC):
     """Represents a Udemy Course.
 
-    This class should not be instantiated directly. Instead use the from_url
-    class method.
+    This class should not be instantiated directly, but it has no abstract
+    methods, so no error will be raised.
 
     Attributes:
         url_id: The id present in the URL path of the course (after /course/).
@@ -21,6 +24,7 @@ class UdemyCourse:
     """
     url_id: str
     coupon: str | None
+    any_coupon: bool
 
     @property
     def url(self) -> str:
@@ -37,12 +41,30 @@ class UdemyCourse:
 
         return url
 
-    @classmethod
-    def from_url(cls: type[Self], url: str) -> Self | None:
-        """Create a new Udemy Course from its URL.
+    @overload
+    @staticmethod
+    def from_url(
+        url: str,
+        any_coupon: Literal[False] = False,
+    ) -> CourseWithCoupon | None:
+        ...
+
+    @overload
+    @staticmethod
+    def from_url(
+        url: str,
+        any_coupon: Literal[True],
+    ) -> CourseWithAnyCoupon | None:
+        ...
+
+    @staticmethod
+    def from_url(url: str, any_coupon: bool = False) -> UdemyCourseT | None:
+        """Create a new UdemyCourse from its URL.
 
         Args:
             url: The course URL.
+            any_coupon: Whether the course should be UdemyCourseWithAnyCoupon or
+            UdemyCourseWithSpecificCoupon
 
         Returns:
             The new Udemy Course if the URL is valid, None otherwise.
@@ -51,22 +73,25 @@ class UdemyCourse:
         parsed = urlparse(url)
         query_params = parse_qs(parsed.query, strict_parsing=True)
 
-        if not cls._verify(parsed.netloc, parsed.path):
+        if not _UdemyCourse.verify(parsed.netloc, parsed.path):
             _debug.debug('%s cannot be parsed as a Udemy course', url)
             return None
 
         # 0 is '', 1 is 'course', 2 is the url_id
         url_id = parsed.path.split('/')[2]
 
+        if any_coupon:
+            return CourseWithAnyCoupon(url_id)
+
         coupon = None
 
         if coupon_query_param := query_params.get('couponCode'):
             coupon = coupon_query_param[0]
 
-        return cls(url_id, coupon)
+        return CourseWithCoupon(url_id, coupon)
 
     @staticmethod
-    def _verify(netloc: str, path: str) -> bool:
+    def verify(netloc: str, path: str) -> bool:
         """Verifies that netloc and path match a valid Udemy Course URL.
 
         Args:
@@ -87,3 +112,50 @@ class UdemyCourse:
         )
 
         return is_udemy and has_course_url_id
+
+
+@dataclass(frozen=True)
+class CourseWithAnyCoupon(_UdemyCourse):
+    """A subclass of UdemyCourse with any_coupon==True.
+
+    In this subclass, coupon is always None.
+
+    """
+    coupon: None = None
+    any_coupon: Literal[True] = True
+
+
+@dataclass(frozen=True)
+class CourseWithCoupon(_UdemyCourse):
+    """A subclass of UdemyCourse with any_coupon==False.
+
+    Note that coupon could still be None, which means specifically the course
+    without any coupon.
+
+    """
+    coupon: str | None
+    any_coupon: Literal[False] = False
+
+    def with_any_coupon(self) -> CourseWithAnyCoupon:
+        """Returns a UdemyCourseWithAnyCoupon with the same url_id.
+
+        Returns:
+            The new course.
+
+        """
+        return CourseWithAnyCoupon(self.url_id)
+
+
+UdemyCourseT = CourseWithAnyCoupon | CourseWithCoupon
+
+
+def is_with_any_coupon(course: UdemyCourseT) -> TypeGuard[CourseWithAnyCoupon]:
+    """Check if a UdemyCourse is a UdemyCourseWithAnyCoupon."""
+    return course.any_coupon
+
+
+def is_with_specific_coupon(
+    course: UdemyCourseT,
+) -> TypeGuard[CourseWithCoupon]:
+    """Check if a UdemyCourse is a UdemyCourseWithSpecificCoupon."""
+    return not course.any_coupon

@@ -20,7 +20,7 @@ from udemy_autocoupons.constants import (
     WAIT_TIMEOUT,
 )
 from udemy_autocoupons.enroller.state import DoneOrErrorT, DoneT, State
-from udemy_autocoupons.udemy_course import UdemyCourse
+from udemy_autocoupons.udemy_course import CourseWithCoupon
 
 _printer = getLogger('printer')
 _debug = getLogger('debug')
@@ -63,7 +63,10 @@ class UdemyDriver:
             WAIT_POLL_FREQUENCY,
         )
 
-    def enroll_from_queue(self, mp_queue: MpQueue[UdemyCourse | None]) -> None:  # pylint: disable=unsubscriptable-object
+    def enroll_from_queue(
+        self,
+        mp_queue: MpQueue[CourseWithCoupon | None],  # pylint: disable=unsubscriptable-object
+    ) -> None:
         """Enrolls in all courses in a queue.
 
         When a None is received from the queue, it is considered that there
@@ -86,7 +89,7 @@ class UdemyDriver:
 
         mp_queue.task_done()
 
-    def enroll(self, course: UdemyCourse) -> DoneOrErrorT:
+    def enroll(self, course: CourseWithCoupon) -> DoneOrErrorT:
         """If the course is discounted, it enrolls the account in it.
 
         Args:
@@ -106,7 +109,7 @@ class UdemyDriver:
             _printer.error('An error occurred while enrolling, skipping course')
             return State.ERROR
 
-    def _enroll(self, course: UdemyCourse) -> DoneT:
+    def _enroll(self, course: CourseWithCoupon) -> DoneT:
         _debug.debug('Enrolling in %s', course.url)
 
         self.driver.get(course.url)
