@@ -1,6 +1,6 @@
 """This module contains the enroll_from_queue function."""
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from logging import getLogger
 from multiprocessing import JoinableQueue as MpQueue
 from typing import NamedTuple
@@ -23,7 +23,7 @@ class RunResult(NamedTuple):
 class Enroller:
     """A class that handles enrolling from a queue using a WebDriver."""
 
-    _MAX_ATTEMPTS = 2
+    _MAX_REATTEMPTS = 2
 
     def __init__(
         self,
@@ -46,6 +46,7 @@ class Enroller:
         self._enrolled_counter = 0
 
         self._attempts: defaultdict[CourseWithCoupon, int] = defaultdict(int)
+        self._reattempt_queue: deque[CourseWithCoupon] = deque()
 
     def enroll_from_queue(self) -> RunResult:
         """Enrolls in all courses in a queue, retrying if needed.
@@ -60,29 +61,24 @@ class Enroller:
 
         """
         while course := self._mp_queue.get():
-            if course in self._blacklist:
-                _debug.debug(
-                    '%s is blacklisted. qsize is %s',
-                    course,
-                    self._mp_queue.qsize(),
-                )
-            else:
-                state = self._driver.enroll(course)
-
-                self._handle_state(course, state)
-
-                qsize = self._mp_queue.qsize()
-                _printer.info('%s courses left.', qsize)
-                _debug.debug(
-                    'Enroll finished for %s. qsize is %s',
-                    course,
-                    qsize,
-                )
-
+            self._handle_enroll(course)
+            _printer.info('%s courses left.', self._mp_queue.qsize())
             self._mp_queue.task_done()
-        _debug.debug('Got None in multiprocessing queue')
 
+        _debug.debug('Got None in multiprocessing queue')
         self._mp_queue.task_done()
+
+        while self._reattempt_queue:
+            course = self._reattempt_queue.popleft()
+
+            _debug.debug('Reattempting %s', course)
+            _printer.info(
+                'Reattempting courses up to %s times. %s enqueued',
+                self._MAX_REATTEMPTS,
+                len(self._reattempt_queue),
+            )
+
+            self._handle_enroll(course)
 
         run_result = RunResult(
             self._blacklist,
@@ -94,6 +90,21 @@ class Enroller:
         _printer.info('Enrolled in %s courses', self._enrolled_counter)
 
         return run_result
+
+    def _handle_enroll(self, course: CourseWithCoupon) -> None:
+        if course in self._blacklist:
+            _debug.debug('%s is blacklisted', course)
+        else:
+            state = self._driver.enroll(course)
+            self._handle_state(course, state)
+
+            _debug.debug('Enroll finished for %s', course)
+
+        _debug.debug(
+            'mp qsize is %s, reattempt queue size is %s',
+            self._mp_queue.qsize(),
+            len(self._reattempt_queue),
+        )
 
     def _handle_state(
         self,
@@ -113,8 +124,8 @@ class Enroller:
         elif state is State.PAID:
             self._blacklist.add(course)
         # Only case left is ERROR
-        elif self._attempts[course] < self._MAX_ATTEMPTS:
+        elif self._attempts[course] < self._MAX_REATTEMPTS:
             self._attempts[course] += 1
-            self._mp_queue.put(course)
+            self._reattempt_queue.append(course)
         else:
             self._errors.add(course)
