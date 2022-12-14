@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, urlparse
 _debug = getLogger('debug')
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _UdemyCourse(ABC):
     """Represents a Udemy Course.
 
@@ -114,7 +114,7 @@ class _UdemyCourse(ABC):
         return is_udemy and has_course_url_id
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CourseWithAnyCoupon(_UdemyCourse):
     """A subclass of UdemyCourse with any_coupon==True.
 
@@ -125,7 +125,7 @@ class CourseWithAnyCoupon(_UdemyCourse):
     any_coupon: Literal[True] = field(default=True, repr=False)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CourseWithCoupon(_UdemyCourse):
     """A subclass of UdemyCourse with any_coupon==False.
 
