@@ -88,17 +88,20 @@ class TutoralbarScraper(Scraper):
           previous persistent data otherwise.
 
         """
-        persistent_data: _PersistentData | None = {
-            'last_date': self._new_last_date,
-        } if self._new_last_date else None
+        if self._new_last_date:
+            persistent_data: _PersistentData = {
+                'last_date': self._new_last_date,
+            }
+            _debug.debug('Returning new persistent data %s', persistent_data)
+
+            return persistent_data
 
         _debug.debug(
-            'Returning persistent data %s because self._new_last_date is %s',
-            persistent_data,
-            self._new_last_date,
+            'Returning old persistent data %s',
+            self._persistent_data,
         )
 
-        return persistent_data
+        return self._persistent_data
 
     async def _request(self, url: str) -> list[str] | None:
         """Sends a request with the given offset.
