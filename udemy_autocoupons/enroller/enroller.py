@@ -16,8 +16,7 @@ _debug = getLogger('debug')
 
 class RunResult(NamedTuple):
     """The result of the enroll_from_queue run."""
-    coupons_not_working: set[CourseWithCoupon]
-    blacklisted_courses: CoursesStore
+    blacklist: CoursesStore
     errors: set[CourseWithCoupon]
 
 
@@ -41,8 +40,7 @@ class Enroller:
         self._driver = driver
         self._mp_queue = mp_queue
 
-        self._coupons_not_working: set[CourseWithCoupon] = set()
-        self._blacklisted_courses = CoursesStore()
+        self._blacklist = CoursesStore()
         self._errors: set[CourseWithCoupon] = set()
 
         self._enrolled_counter = 0
@@ -62,7 +60,7 @@ class Enroller:
 
         """
         while course := self._mp_queue.get():
-            if course in self._blacklisted_courses:
+            if course in self._blacklist:
                 _debug.debug(
                     '%s is blacklisted. qsize is %s',
                     course,
@@ -87,8 +85,7 @@ class Enroller:
         self._mp_queue.task_done()
 
         run_result = RunResult(
-            self._coupons_not_working,
-            self._blacklisted_courses,
+            self._blacklist,
             self._errors,
         )
         _debug.debug('Run result was %s', run_result)
@@ -112,9 +109,9 @@ class Enroller:
                 State.IN_ACCOUNT,
                 State.UNAVAILABLE,
         }:
-            self._blacklisted_courses.add(course.with_any_coupon())
+            self._blacklist.add(course.with_any_coupon())
         elif state is State.PAID:
-            self._coupons_not_working.add(course)
+            self._blacklist.add(course)
         # Only case left is ERROR
         elif self._attempts[course] < self._MAX_ATTEMPTS:
             self._attempts[course] += 1
