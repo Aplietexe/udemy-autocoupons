@@ -52,6 +52,25 @@ class CoursesStore(MutableSet):
         """
         return len(self._any_coupon) + len(self._specific_coupon)
 
+    def __repr__(self) -> str:
+        """String representation of the object.
+
+        Is such that eval(repr(courses_store))==courses_store.
+
+        """
+        repr_ = 'CoursesStore('
+
+        if self._specific_coupon:
+            specific_repr = repr(self._specific_coupon)[1:-1]
+            repr_ += f'{specific_repr}, '
+
+        if self._any_coupon:
+            repr_ += repr(self._any_coupon)[1:-1]
+
+        repr_ += ')'
+
+        return repr_
+
     def add(self, course: UdemyCourseT) -> None:
         """Adds a course to the store."""
         if is_with_any_coupon(course):
