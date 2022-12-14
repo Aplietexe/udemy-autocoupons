@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from logging import getLogger
 from typing import Literal, TypeGuard, overload
 from urllib.parse import parse_qs, urlparse
@@ -121,8 +121,8 @@ class CourseWithAnyCoupon(_UdemyCourse):
     In this subclass, coupon is always None.
 
     """
-    coupon: None = None
-    any_coupon: Literal[True] = True
+    coupon: None = field(default=None, repr=False)
+    any_coupon: Literal[True] = field(default=True, repr=False)
 
 
 @dataclass(frozen=True)
@@ -134,7 +134,7 @@ class CourseWithCoupon(_UdemyCourse):
 
     """
     coupon: str | None
-    any_coupon: Literal[False] = False
+    any_coupon: Literal[False] = field(default=False, repr=False)
 
     def with_any_coupon(self) -> CourseWithAnyCoupon:
         """Returns a UdemyCourseWithAnyCoupon with the same url_id.
