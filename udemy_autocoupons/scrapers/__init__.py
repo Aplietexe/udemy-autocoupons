@@ -1,6 +1,6 @@
 """This package contains all scrapers."""
-from udemy_autocoupons.scrapers.tutorialbar_scraper import TutoralbarScraper
+from udemy_autocoupons.scrapers.tutorialbar_scraper import TutorialbarScraper
 
-scraper_types = (TutoralbarScraper,)
+scraper_types = (TutorialbarScraper,)
 
-ScrapersT = tuple[TutoralbarScraper]
+ScrapersT = tuple[TutorialbarScraper]

@@ -1,4 +1,4 @@
-"""This module contains the TutoralbarScraper scraper."""
+"""This module contains the TutorialbarScraper scraper."""
 import asyncio
 from asyncio import Queue as AsyncQueue
 from logging import getLogger
@@ -26,7 +26,7 @@ _printer = getLogger('printer')
 _debug = getLogger('debug')
 
 
-class TutoralbarScraper(Scraper):
+class TutorialbarScraper(Scraper):
     """Handles tutorialbar.com scraping."""
     _WAIT = 1
     _LONG_WAIT = 5
