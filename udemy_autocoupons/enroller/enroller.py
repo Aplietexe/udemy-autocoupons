@@ -24,7 +24,7 @@ class RunResult(NamedTuple):
 class Enroller:
     """A class that handles enrolling from a queue using a WebDriver."""
 
-    _MAX_ATTEMPTS = 5
+    _MAX_ATTEMPTS = 2
 
     def __init__(
         self,
