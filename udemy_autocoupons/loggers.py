@@ -17,6 +17,7 @@ def create_logger(
     level: int,
     handler: Handler,
     format_str: str,
+    date_format: str | None = None,
 ) -> Logger:
     """Creates a logger with the given options.
 
@@ -25,6 +26,7 @@ def create_logger(
         level: The logging level.
         handler: The handler for the logger to use.
         format_str: The format string to use.
+        date_format: The format to use for dates.
 
     Returns:
         The created logger.
@@ -33,7 +35,7 @@ def create_logger(
     logger = getLogger(name)
     logger.setLevel(level)
 
-    formatter = Formatter(format_str)
+    formatter = Formatter(format_str, date_format)
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
@@ -44,7 +46,13 @@ def create_logger(
 def setup_loggers() -> None:
     """Sets up the printer and debug loggers."""
     printer_handler = StreamHandler(stdout)
-    create_logger('printer', INFO, printer_handler, '%(asctime)s: %(message)s')
+    create_logger(
+        'printer',
+        INFO,
+        printer_handler,
+        '%(asctime)s: %(message)s',
+        '%H:%M:%S',
+    )
 
     debug_handler = FileHandler('log.log')
     debug = create_logger(

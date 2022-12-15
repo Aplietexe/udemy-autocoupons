@@ -61,7 +61,7 @@ class TutorialbarScraper(Scraper):
         offset = 0
 
         while urls := await self._request(self._generate_url(offset)):
-            _printer.info('Got %s urls from tutorialbar.com.', len(urls))
+            _printer.info('Tutorialbar Scraper: Got %s course urls.', len(urls))
             _debug.debug('Sending %s urls to async queue', len(urls))
 
             await self._enqueue_urls(urls)
@@ -154,7 +154,7 @@ class TutorialbarScraper(Scraper):
                     json_res,
                 )
                 _printer.error(
-                    'Error extracting course urls from tutorialbar. Check logs.',
+                    'ERROR extracting course urls from tutorialbar. Check logs.',
                 )
 
             return urls

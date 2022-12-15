@@ -62,7 +62,10 @@ class Enroller:
         """
         while course := self._mp_queue.get():
             self._handle_enroll(course)
-            _printer.info('%s courses left.', self._mp_queue.qsize())
+            _printer.info(
+                'Enroller: Approximately %s courses left.',
+                self._mp_queue.qsize() - 1,
+            )
             self._mp_queue.task_done()
 
         _debug.debug('Got None in multiprocessing queue')
@@ -73,7 +76,7 @@ class Enroller:
 
             _debug.debug('Reattempting %s', course)
             _printer.info(
-                'Reattempting courses up to %s times. %s enqueued',
+                'Enroller: Reattempting courses up to %s times. %s enqueued',
                 self._MAX_REATTEMPTS,
                 len(self._reattempt_queue),
             )

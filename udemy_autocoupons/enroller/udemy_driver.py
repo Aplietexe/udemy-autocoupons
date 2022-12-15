@@ -83,7 +83,7 @@ class UdemyDriver:
                 'A WebDriverException was encountered while enrolling in %s',
                 course,
             )
-            _printer.error('An error occurred while enrolling, skipping course')
+            _printer.error('Enroller: An error occurred while enrolling.')
             return State.ERROR
 
     def _enroll(self, course: CourseWithCoupon) -> DoneT:
