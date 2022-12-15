@@ -117,12 +117,7 @@ class Enroller:
         if state is State.ENROLLED:
             self._enrolled_counter += 1
 
-        if state in {
-                State.ENROLLED,
-                State.FREE,
-                State.IN_ACCOUNT,
-                State.UNAVAILABLE,
-        }:
+        if state in {State.ENROLLED, State.TO_BLACKLIST}:
             self._blacklist.add(course.with_any_coupon())
         elif state is State.PAID:
             self._blacklist.add(course)

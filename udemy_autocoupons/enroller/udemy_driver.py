@@ -24,6 +24,8 @@ from udemy_autocoupons.udemy_course import CourseWithCoupon
 _printer = getLogger('printer')
 _debug = getLogger('debug')
 
+_CheckedStateT = Literal[State.PAID, State.TO_BLACKLIST, State.ENROLLABLE]
+
 
 class UdemyDriver:
     """Handles Udemy usage.
@@ -36,7 +38,11 @@ class UdemyDriver:
 
     """
 
-    _ENROLL_BUTTON_SELECTOR = '[data-purpose*="buy-this-course-button"]'
+    _SELECTORS = {
+        'ENROLL_BUTTON': '[data-purpose*="buy-this-course-button"]',
+        'FREE_BADGE': '.ud-badge-free',
+        'PURCHASED': '[class*="purchase-info"]',
+    }
 
     def __init__(self) -> None:
         """Starts the driver."""
@@ -91,17 +97,15 @@ class UdemyDriver:
 
         self.driver.get(course.url)
 
-        if not self._course_is_available():
-            _debug.debug('_course_is_available is False for %s', course.url)
-            return State.UNAVAILABLE
-
-        # The previous check guarantees that the button will show
-        enroll_button = self._wait_for_clickable(self._ENROLL_BUTTON_SELECTOR)
-
-        if (state := self._get_course_state()) != State.ENROLLABLE:
+        if (state := self._fast_course_state(course)) != State.ENROLLABLE:
+            _debug.debug('_fast_course_state is %s for %s', state, course.url)
             return state
 
-        enroll_button.click()
+        if (state := self._get_course_state()) != State.ENROLLABLE:
+            _debug.debug('_get_course_state is %s for %s', state, course.url)
+            return state
+
+        self._wait_for_clickable(self._SELECTORS['ENROLL_BUTTON']).click()
 
         if (state := self._checkout_is_correct()) != State.ENROLLABLE:
             # This is only intended as a safeguard, the execution should never
@@ -121,90 +125,103 @@ class UdemyDriver:
         self._wait.until(lambda driver: 'checkout' not in driver.current_url)
         return State.ENROLLED
 
-    def _course_is_available(self) -> bool:
-        """Check if the current course on screen is available.
+    def _fast_course_state(self, course: CourseWithCoupon) -> _CheckedStateT:
+        """Check if the current course on screen is enrollable.
 
-        The detection looks for either a redirect to a more general route, to /,
-        a banner indicating that the course is unavailable, a 404 error banner,
-        a private course button or the enroll button. Only in the last case the
-        course is available.
+        This might return a false positive, but it's the fastest method so it
+        should be used first.
 
         Returns:
-           True if the current course is available, False otherwise.
+           True if the current course is enrollable, False otherwise.
 
         """
         unavailable_selector = '[class*="limited-access-container--content"]'
         banner404_selector = '.error__container'
         private_button_selector = '[class*="course-landing-page-private"]'
 
-        self._wait.until(
-            EC.any_of(
-                EC.url_contains('/topic/'),
-                EC.url_contains('/courses/'),
-                EC.url_to_be('https://www.udemy.com/'),
-                self._ec_located(unavailable_selector),
-                self._ec_located(banner404_selector),
-                self._ec_located(self._ENROLL_BUTTON_SELECTOR),
-                self._ec_located(private_button_selector),
-            ),
-        )
+        checks = [
+            EC.url_contains('/topic/'),
+            EC.url_contains('/courses/'),
+            EC.url_contains('/draft/'),
+            EC.url_to_be('https://www.udemy.com/'),
+            self._ec_located(unavailable_selector),
+            self._ec_located(banner404_selector),
+            self._ec_located(private_button_selector),
+            self._ec_located(self._SELECTORS['ENROLL_BUTTON']),
+            self._ec_located(self._SELECTORS['FREE_BADGE']),
+            self._ec_located(self._SELECTORS['PURCHASED']),
+        ]
+
+        if course.coupon:
+            checks.append(EC.url_to_be(course.with_any_coupon().url))
+
+        self._wait.until(EC.any_of(*checks))
 
         unavailable_elements = self._find_elements(unavailable_selector)
         banner404_elements = self._find_elements(banner404_selector)
         private_button_elements = self._find_elements(private_button_selector)
+        free_badge_elements = self._find_elements(self._SELECTORS['PURCHASED'])
+        purchased_elements = self._find_elements(self._SELECTORS['FREE_BADGE'])
 
         _debug.debug(
-            'Url: %s; unavailable: %s; banner404: %s; private_button: %s',
+            'Url: %s; unavailable: %s; banner404: %s',
             self.driver.current_url,
             unavailable_elements,
             banner404_elements,
+        )
+        _debug.debug(
+            'private_button: %s; free_badge: %s; purchased: %s',
             private_button_elements,
+            free_badge_elements,
+            purchased_elements,
         )
 
-        return (
-            '/topic/' not in self.driver.current_url and
-            '/courses/' not in self.driver.current_url and
-            self.driver.current_url != 'https://www.udemy.com/' and
-            not unavailable_elements and not banner404_elements and
-            not private_button_elements
+        to_blacklist = (
+            '/topic/' in self.driver.current_url or
+            '/courses/' in self.driver.current_url or
+            '/draft/' in self.driver.current_url or
+            self.driver.current_url == 'https://www.udemy.com/' or
+            unavailable_elements or banner404_elements or
+            private_button_elements or free_badge_elements or purchased_elements
         )
 
-    def _get_course_state(
-        self,
-    ) -> Literal[State.IN_ACCOUNT, State.FREE, State.PAID, State.ENROLLABLE]:
+        if to_blacklist:
+            return State.TO_BLACKLIST
+
+        if self.driver.current_url == course.with_any_coupon().url:
+            return State.PAID
+
+        return State.ENROLLABLE
+
+    def _get_course_state(self) -> _CheckedStateT:
         """Checks the state of the course in screen.
 
         Returns:
             The state of the course.
 
         """
-        purchased_selector = '[class*="purchase-info"]'
         price_selector = '[data-purpose*="course-price-text"] span:not(.ud-sr-only)'
-        free_badge_selector = '.ud-badge-free'
 
         self._wait.until(
             EC.any_of(
-                self._ec_located(purchased_selector),
+                self._ec_located(self._SELECTORS['PURCHASED']),
                 self._ec_located(price_selector),
-                self._ec_located(free_badge_selector),
+                self._ec_located(self._SELECTORS['FREE_BADGE']),
             ),
         )
 
-        if self._find_elements(purchased_selector):
+        free_badge_elements = self._find_elements(self._SELECTORS['FREE_BADGE'])
+        purchased_elements = self._find_elements(self._SELECTORS['PURCHASED'])
+
+        if (free_badge_elements or purchased_elements):
             _debug.debug(
-                'Found purchased_selector in %s',
+                'In %s, free badge %s, purchased, %s',
                 self.driver.current_url,
+                free_badge_elements,
+                purchased_elements,
             )
 
-            return State.IN_ACCOUNT
-
-        if self._find_elements(free_badge_selector):
-            _debug.debug(
-                'Found free_badge_selector in %s',
-                self.driver.current_url,
-            )
-
-            return State.FREE
+            return State.TO_BLACKLIST
 
         # Wait first so that we can then use find_element instead of nesting waits
         self._wait_for(price_selector)
@@ -219,9 +236,7 @@ class UdemyDriver:
 
         return State.PAID if '$' in price_text else State.ENROLLABLE
 
-    def _checkout_is_correct(
-        self,
-    ) -> Literal[State.IN_ACCOUNT, State.FREE, State.ENROLLABLE]:
+    def _checkout_is_correct(self) -> _CheckedStateT:
         """Checks that the state of the course in the checkout is correct.
 
         This is a fallback in case _get_course_state fails.
@@ -242,19 +257,18 @@ class UdemyDriver:
 
         _debug.debug('Url is %s', self.driver.current_url)
 
-        if '/learn/lecture/' in self.driver.current_url:
-            return State.IN_ACCOUNT
-
-        if '/cart/subscribe/course/' in self.driver.current_url:
-            return State.FREE
+        if ('/learn/lecture/' in self.driver.current_url or
+                '/cart/subscribe/course/' in self.driver.current_url):
+            return State.TO_BLACKLIST
 
         total_amount_text = self._wait_for(total_amount_locator).text
 
         _debug.debug('Total amount text is %s', total_amount_text)
 
-        return State.ENROLLABLE if (
-            total_amount_text.startswith('0')
-        ) else State.FREE
+        return (
+            State.ENROLLABLE
+            if total_amount_text.startswith('0') else State.PAID
+        )
 
     def _wait_for(self, css_selector: str) -> WebElement:
         """Waits until the element with the given CSS selector is located.

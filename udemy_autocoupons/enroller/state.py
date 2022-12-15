@@ -9,17 +9,10 @@ class State(Enum):
     ENROLLABLE = 'ENROLLABLE'
     ENROLLED = 'ENROLLED'
     ERROR = 'ERROR'
-    FREE = 'FREE'
-    IN_ACCOUNT = 'IN_ACCOUNT'
     PAID = 'PAID'
-    UNAVAILABLE = 'UNAVAILABLE'
+    TO_BLACKLIST = 'TO_BLACKLIST'
 
 
-DoneT = Literal[State.ENROLLED,
-                State.FREE,
-                State.IN_ACCOUNT,
-                State.PAID,
-                State.UNAVAILABLE,
-               ]
+DoneT = Literal[State.ENROLLED, State.PAID, State.TO_BLACKLIST]
 
 DoneOrErrorT = DoneT | Literal[State.ERROR]
