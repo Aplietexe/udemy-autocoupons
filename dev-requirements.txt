@@ -5,8 +5,8 @@
 pylint==2.15.10
 flake8==4.0.1
 bandit==1.7.4
-pyright==1.1.289
-pydocstyle==6.2.3
+pyright==1.1.290
+pydocstyle==6.3.0
 
 # Formatting
 black==22.12.0

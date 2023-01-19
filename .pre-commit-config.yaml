@@ -91,7 +91,7 @@ repos:
           - aiohttp[speedups]
 
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.2.3
+    rev: 6.3.0
     hooks:
       - id: pydocstyle
 
@@ -107,7 +107,7 @@ repos:
       - id: flake8
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.289
+    rev: v1.1.290
     hooks:
       - id: pyright
 
