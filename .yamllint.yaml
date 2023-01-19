@@ -1,4 +1,5 @@
 ---
+$schema: https://json.schemastore.org/yamllint.json
 extends: default
 ignore:
   - .venv

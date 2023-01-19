@@ -70,6 +70,9 @@ repos:
     rev: 0.20.0
     hooks:
       - id: check-metaschema
+        name: Check YAML and JSON files against their schema
+        exclude: ^\.github/workflows/[^/]*\.ya?ml$
+      - id: check-github-workflows
 
   ## TOML
   - repo: https://github.com/pre-commit/pre-commit-hooks

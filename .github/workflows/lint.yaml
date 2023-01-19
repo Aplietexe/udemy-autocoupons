@@ -43,6 +43,21 @@ jobs:
           yamllint --strict ${{ steps.changed-files.outputs.all_changed_files }}
         if: steps.changed-files.outputs.all_changed_files != ''
 
+  check-github-workflows:
+    name: Check GitHub workflows against their schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: tj-actions/changed-files@v35
+        id: changed-files
+        with:
+          files: .github/workflows/*.{yaml,yml}
+          separator: "|"
+      - uses: cardinalby/schema-validator-action@v1
+        with:
+          file: ${{ steps.changed-files.outputs.all_changed_files }}
+          schema: https://json.schemastore.org/github-workflow.json
+
   # YAML, JSON
   check-metaschema:
     # schema-validator-action fails if there is no $schema, so this is preferred
@@ -54,6 +69,7 @@ jobs:
         id: changed-files
         with:
           files: "**/*.{json,jsonc,yaml,yml}"
+          files_ignore: .github/workflows/*.{yaml,yml}
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"

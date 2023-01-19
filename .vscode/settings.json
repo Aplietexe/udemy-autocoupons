@@ -23,5 +23,8 @@
   "yaml.format.proseWrap": "always",
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/pre-commit-config.json": "file:///home/pietr/code/udemy_autocoupons/.github/pre-commit-ci-config.yaml"
   }
 }
