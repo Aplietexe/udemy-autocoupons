@@ -1,5 +1,10 @@
 # How to contribute to this project
 
+![Docstrings](https://img.shields.io/badge/docstrings-google-lightgrey)
+![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)
+![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)
+![Lint CI](https://github.com/aplietexe/udemy-autocoupons/actions/workflows/lint.yaml/badge.svg?style=for-the-badge)
+
 Did you find a bug, or have a feature request?
 
 - Ensure there isn't already a similar issue open by searching on GitHub under

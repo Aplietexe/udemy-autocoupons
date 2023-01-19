@@ -1,6 +1,13 @@
 # Udemy Autocoupons
 
-A python module that uses web scraping to obtain Udemy Coupons, and then enrolls
+![GitHub](https://img.shields.io/github/license/aplietexe/udemy-autocoupons)
+![Maintenance](https://img.shields.io/maintenance/yes/2023)
+![GitHub last commit](https://img.shields.io/github/last-commit/aplietexe/udemy-autocoupons)
+![Lint CI](https://github.com/aplietexe/udemy-autocoupons/actions/workflows/lint.yaml/badge.svg?style=for-the-badge)
+![Python version](https://img.shields.io/badge/python-3.11+-blue?logo=python)
+![Platform](https://img.shields.io/badge/platform-linux-lightgrey)
+
+A python package that uses web scraping to obtain Udemy Coupons, and then enrolls
 in them using the provided account.
 
 It owes its performance mostly to multiprocessing, asynchronicity and persistent
@@ -56,7 +63,7 @@ Install the required dependencies
 pip install -r requirements.txt
 ```
 
-Run the module
+Run the package
 
 ```shell
 python -m udemy_autocoupons
