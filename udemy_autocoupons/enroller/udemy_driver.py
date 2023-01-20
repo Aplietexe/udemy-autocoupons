@@ -42,6 +42,7 @@ class UdemyDriver:
         "ENROLL_BUTTON": '[data-purpose*="buy-this-course-button"]',
         "FREE_BADGE": ".ud-badge-free",
         "PURCHASED": '[class*="purchase-info"]',
+        "FREE_COURSE": '[class*="generic-purchase-section--free-course"]',
     }
 
     def __init__(self) -> None:
@@ -162,6 +163,9 @@ class UdemyDriver:
         private_button_elements = self._find_elements(private_button_selector)
         free_badge_elements = self._find_elements(self._SELECTORS["PURCHASED"])
         purchased_elements = self._find_elements(self._SELECTORS["FREE_BADGE"])
+        free_course_elements = self._find_elements(
+            self._SELECTORS["FREE_COURSE"],
+        )
 
         _debug.debug(
             "Url: %s; unavailable: %s; banner404: %s",
@@ -170,10 +174,11 @@ class UdemyDriver:
             banner404_elements,
         )
         _debug.debug(
-            "private_button: %s; free_badge: %s; purchased: %s",
+            "private_button: %s; free_badge: %s; purchased: %s; free_course: %s",
             private_button_elements,
             free_badge_elements,
             purchased_elements,
+            free_course_elements,
         )
 
         to_blacklist = (
@@ -186,6 +191,7 @@ class UdemyDriver:
             or private_button_elements
             or free_badge_elements
             or purchased_elements
+            or free_course_elements
         )
 
         if to_blacklist:
@@ -212,18 +218,23 @@ class UdemyDriver:
                 self._ec_located(self._SELECTORS["PURCHASED"]),
                 self._ec_located(price_selector),
                 self._ec_located(self._SELECTORS["FREE_BADGE"]),
+                self._ec_located(self._SELECTORS["FREE_COURSE"]),
             ),
         )
 
         free_badge_elements = self._find_elements(self._SELECTORS["FREE_BADGE"])
         purchased_elements = self._find_elements(self._SELECTORS["PURCHASED"])
+        free_course_elements = self._find_elements(
+            self._SELECTORS["FREE_COURSE"],
+        )
 
-        if free_badge_elements or purchased_elements:
+        if free_badge_elements or purchased_elements or free_course_elements:
             _debug.debug(
-                "In %s, free badge %s, purchased, %s",
+                "In %s, free badge %s, purchased, %s, free course %s",
                 self.driver.current_url,
                 free_badge_elements,
                 purchased_elements,
+                free_course_elements,
             )
 
             return State.TO_BLACKLIST
