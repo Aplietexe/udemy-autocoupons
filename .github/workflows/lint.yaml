@@ -323,11 +323,11 @@ jobs:
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
           python -m pip install -r requirements.txt
-      - uses: jakebailey/pyright-action@v1
-        with:
-          version: 1.1.290
-          project: pyrightconf.json
-          extra-args: ${{ steps.changed-files.outputs.all_changed_files }}
+          python -m pip install pyright==1.1.290
+
+      - run: >-
+          pyright --verbose --stats --warnings ${{
+          steps.changed-files.outputs.all_changed_files }}
         if: steps.changed-files.outputs.all_changed_files != ''
 
   skjold:
