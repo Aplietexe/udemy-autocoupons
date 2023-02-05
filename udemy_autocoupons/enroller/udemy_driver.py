@@ -26,6 +26,8 @@ _debug = getLogger("debug")
 
 _CheckedStateT = Literal[State.PAID, State.TO_BLACKLIST, State.ENROLLABLE]
 
+_ExpectedConditionT = Callable[[Chrome], WebElement | Literal[False]]
+
 
 class UdemyDriver:
     """Handles Udemy usage.
@@ -315,9 +317,7 @@ class UdemyDriver:
             The element once it's clickable.
 
         """
-        return self._wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, css_selector)),
-        )
+        return self._wait.until(self._ec_clickable(css_selector))
 
     def _find(self, css_selector: str) -> WebElement:
         """Finds without waiting the element with the given CSS selector.
@@ -347,7 +347,7 @@ class UdemyDriver:
         return self.driver.find_elements(By.CSS_SELECTOR, css_selector)
 
     @staticmethod
-    def _ec_located(css_selector: str) -> Callable[[Chrome], WebElement]:
+    def _ec_located(css_selector: str) -> _ExpectedConditionT:
         """Creates an expected condition for locating the given selector.
 
         Args:
@@ -358,3 +358,16 @@ class UdemyDriver:
 
         """
         return EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
+
+    @staticmethod
+    def _ec_clickable(css_selector: str) -> _ExpectedConditionT:
+        """Creates an expected condition for the given selector to be clickable.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            An expected condition which returns the found element.
+
+        """
+        return EC.element_to_be_clickable((By.CSS_SELECTOR, css_selector))
