@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 from logging import getLogger
 from typing import Literal
 
@@ -371,3 +372,35 @@ class UdemyDriver:
 
         """
         return EC.element_to_be_clickable((By.CSS_SELECTOR, css_selector))
+
+    @staticmethod
+    def _cursor_to_be_allowed(
+        css_selector: str,
+        driver: Chrome,
+    ) -> WebElement | Literal[False]:
+        """An expected condition for the cursor to be allowed.
+
+        Args:
+            css_selector: The CSS selector of the element.
+            driver: The Chrome WebDriver to use.
+
+        """
+        target = driver.find_element(By.CSS_SELECTOR, css_selector)
+
+        if target.value_of_css_property("cursor") != "not-allowed":
+            return target
+
+        return False
+
+    @classmethod
+    def _ec_cursor_allowed(cls, css_selector: str) -> _ExpectedConditionT:
+        """Creates an expected condition for the cursor to be allowed.
+
+        Args:
+            css_selector: The CSS selector of the element.
+
+        Returns:
+            An expected condition which returns the found element.
+
+        """
+        return partial(cls._cursor_to_be_allowed, css_selector)
