@@ -121,10 +121,18 @@ class UdemyDriver:
             )
             return state
 
-        checkout_button = self._wait_for_clickable(
-            '[class*="checkout-button--checkout-button--button"]',
+        checkout_button_selector = (
+            '[class*="checkout-button--checkout-button--button"]'
         )
-        checkout_button.click()
+
+        self._wait.until(
+            EC.all_of(
+                self._ec_clickable(checkout_button_selector),
+                self._ec_cursor_allowed(checkout_button_selector),
+            ),
+        )
+
+        self._find(checkout_button_selector).click()
 
         self._wait.until(lambda driver: "checkout" not in driver.current_url)
         return State.ENROLLED
