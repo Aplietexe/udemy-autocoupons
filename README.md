@@ -32,7 +32,7 @@ This project aims to avoid those issues, and focuses on:
 It requires
 
 - Python 3.11+
-- Linux
+- Linux or Windows
 - The latest Chrome version
 - A Chrome profile already logged in. By default, the profile in the folder
   "Profile 1" is used, but this can be changed with --profile-directory. Note
@@ -53,8 +53,16 @@ python -m venv .venv
 
 Activate the virtual environment
 
+Linux:
+
 ```shell
 source .venv/vin/activate
+```
+
+Windows (PowerShell):
+
+```posh
+.venv/Scripts/activate
 ```
 
 Install the required dependencies
@@ -88,7 +96,9 @@ source .venv/vin/activate && python -m udemy_autocoupons
 
 - The path of the directory with the user data. The profile should be in this
   folder.
-- Default: `~/.config/google-chrome/`
+- Default:
+  - Linux: `~/.config/google-chrome/`
+  - Windows: `"%USERPROFILE%/AppData/Local/Google/Chrome/User Data/"`
 
 ## Contributing
 
