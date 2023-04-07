@@ -89,6 +89,7 @@ repos:
           - selenium
           - undetected-chromedriver
           - aiohttp[speedups]
+          - frozendict
 
   - repo: https://github.com/PyCQA/pydocstyle
     rev: 6.3.0

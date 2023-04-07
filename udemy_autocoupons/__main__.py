@@ -8,6 +8,7 @@ from multiprocessing import Process
 from aiohttp import ClientSession
 
 from udemy_autocoupons.loggers import setup_loggers
+from udemy_autocoupons.parse_arguments import parse_arguments
 from udemy_autocoupons.persistent_data import (
     load_scrapers_data,
     save_scrapers_data,
@@ -30,12 +31,14 @@ async def main() -> None:
 
     debug.debug("Got scrapers data %s", scraper_types[0].__name__)
 
+    args = parse_arguments()
+
     # Listen for urls in the async queue
     async with QueueManager() as (async_queue, mp_queue):
         # Listen for courses in the multiprocessing queue
         process = Process(
             target=run_driver,
-            args=(mp_queue,),
+            args=(mp_queue, args["profile_directory"], args["user_data_dir"]),
             name="UdemyDriverProcess",
         )
         process.start()

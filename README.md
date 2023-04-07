@@ -37,7 +37,10 @@ It requires
 - Python 3.11+
 - Linux
 - The latest Chrome version
-- Chrome profile in `Profile 1` should be logged into the desired Udemy account
+- A Chrome profile already logged in. By default, the profile in the folder
+  "Profile 1" is used, but this can be changed with --profile-directory. Note
+  that "Profile 1" is automatically given by Chrome to the first manually
+  created profile, it's not the default one.
 
 Clone this repo and move into it
 
@@ -75,6 +78,20 @@ directory with the project and running
 ```shell
 source .venv/vin/activate && python -m udemy_autocoupons
 ```
+
+## CLI
+
+### `--profile-directory`
+
+- The name of the directory in the Chrome install location with the profile that
+  should be used.
+- Default: `Profile 1`
+
+### `--user_data_dir`
+
+- The path of the directory with the user data. The profile should be in this
+  folder.
+- Default: `~/.config/google-chrome/`
 
 ## Contributing
 

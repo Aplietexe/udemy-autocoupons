@@ -13,12 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
 from selenium.webdriver.support.wait import WebDriverWait
 from undetected_chromedriver import Chrome, ChromeOptions
 
-from udemy_autocoupons.constants import (
-    PROFILE_DIRECTORY,
-    USER_DATA_DIR,
-    WAIT_POLL_FREQUENCY,
-    WAIT_TIMEOUT,
-)
+from udemy_autocoupons.constants import WAIT_POLL_FREQUENCY, WAIT_TIMEOUT
 from udemy_autocoupons.enroller.state import DoneOrErrorT, DoneT, State
 from udemy_autocoupons.udemy_course import CourseWithCoupon
 
@@ -48,18 +43,24 @@ class UdemyDriver:
         "FREE_COURSE": '[class*="generic-purchase-section--free-course"]',
     }
 
-    def __init__(self) -> None:
-        """Starts the driver."""
+    def __init__(self, profile_directory: str, user_data_dir: str) -> None:
+        """Starts the driver.
+
+        Args:
+            profile_directory: The directory of the profile to use.
+            user_data_dir: The directory with the profile directory.
+
+        """
         options = ChromeOptions()
         options.add_argument("--start-maximized")
 
-        options.add_argument(f"--profile-directory={PROFILE_DIRECTORY}")
-        options.add_argument(f"user-data-dir={USER_DATA_DIR}")
+        options.add_argument(f"--profile-directory={profile_directory}")
+        options.add_argument(f"user-data-dir={user_data_dir}")
 
         _debug.debug(
             "Starting WebDriver with --profile-directory %s and user-data-dir %s",
-            PROFILE_DIRECTORY,
-            USER_DATA_DIR,
+            profile_directory,
+            user_data_dir,
         )
 
         self.driver = Chrome(options=options)
