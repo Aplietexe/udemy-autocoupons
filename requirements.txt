@@ -4,3 +4,6 @@ undetected-chromedriver==3.4.6
 
 # To scrap
 aiohttp[speedups]==3.8.4
+
+# Windows compat
+tzdata==2023.3
