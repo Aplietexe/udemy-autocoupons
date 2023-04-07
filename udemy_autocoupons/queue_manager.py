@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from asyncio import Queue as AsyncQueue, create_task
 from logging import getLogger
-from multiprocessing import JoinableQueue as MpQueue
+from queue import Queue as MtQueue
 
 from udemy_autocoupons.udemy_course import CourseWithCoupon
 
@@ -17,22 +17,20 @@ class QueueManager:
 
     It uses an async Queue for scrapers to add their URLs, which is then
     accessed by the manager, which validates and parses the URL and adds the
-    course to a multiprocessing JoinableQueue.
+    course to a multithreading JoinableQueue.
 
-    On open it gives the async and multiprocessing queues, and on exit adds a
+    On open it gives the async and multithreading queues, and on exit adds a
     None to each and waits for them to finish.
 
     Attributes:
-      mp_queue: The wrapped multiprocessing queue.
+      mt_queue: The wrapped multithreading queue.
       async_queue: The wrapper async queue.
 
     """
 
     def __init__(self) -> None:
         """Creates a queue and stores it in the queue attribute."""
-        self.mp_queue: MpQueue[  # pylint: disable=unsubscriptable-object
-            CourseWithCoupon | None
-        ] = MpQueue()
+        self.mt_queue: MtQueue[CourseWithCoupon | None] = MtQueue()
         self.async_queue: AsyncQueue[str | None] = AsyncQueue()
 
         self._seen: set[CourseWithCoupon] = set()
@@ -40,23 +38,18 @@ class QueueManager:
 
     async def __aenter__(
         self,
-    ) -> tuple[
-        AsyncQueue[str | None],
-        MpQueue[  # pylint: disable=unsubscriptable-object
-            CourseWithCoupon | None
-        ],
-    ]:
+    ) -> tuple[AsyncQueue[str | None], MtQueue[CourseWithCoupon | None]]:
         """Gets the queues.
 
         Returns:
-            A tuple containing the async and multiprocessing queues.
+            A tuple containing the async and multithreading queues.
 
         """
         _debug.debug("Entered QueueManager context manager")
-        return (self.async_queue, self.mp_queue)
+        return (self.async_queue, self.mt_queue)
 
     async def __aexit__(self, *_) -> None:
-        """Closes and waits the async and multiprocessing queue."""
+        """Closes and waits the async and multithreading queue."""
         await self.async_queue.put(None)
         _debug.debug("Waiting async queue")
         await self.async_queue.join()
@@ -64,9 +57,9 @@ class QueueManager:
         _debug.debug("Waiting _process_courses task")
         await self._task
 
-        self.mp_queue.put(None)
-        _debug.debug("Waiting multiprocessing queue")
-        self.mp_queue.join()
+        self.mt_queue.put(None)
+        _debug.debug("Waiting multithreading queue")
+        self.mt_queue.join()
 
         _debug.debug("Exiting QueueManager context manager")
 
@@ -74,7 +67,7 @@ class QueueManager:
         while url := await self.async_queue.get():
             if course := CourseWithCoupon.from_url(url):
                 if course not in self._seen:
-                    self.mp_queue.put(course)
+                    self.mt_queue.put(course)
                 else:
                     _debug.debug("Ignoring duplicate course %s", course)
             self.async_queue.task_done()

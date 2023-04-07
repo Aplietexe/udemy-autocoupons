@@ -10,9 +10,6 @@
 A python package that uses web scraping to obtain Udemy Coupons, and then enrolls
 in them using the provided account.
 
-It owes its performance mostly to multiprocessing, asynchronicity and persistent
-data storage.
-
 Currently supported coupons websites:
 
 - tutorialbar.com
@@ -100,9 +97,9 @@ Contributions are welcome, check [CONTRIBUTING](docs/CONTRIBUTING.md).
 ## Architecture
 
 Because of Cloudflare bot detection, the only consistent option is to use
-Selenium, which is synchronous. The solution then is to use multiprocessing to
-run the scrapers and Selenium in parallel, along with a process-safe data
-structure to communicate between processes.
+Selenium, which is synchronous. The solution then is to use multithreading to
+run the scrapers and Selenium in parallel, along with a thread-safe data
+structure to communicate between threads.
 
 Also, we need to use an async-safe data structure to get the results of the
 scrapers, as they are run asynchronously.

@@ -2,7 +2,7 @@
 
 from collections import defaultdict, deque
 from logging import getLogger
-from multiprocessing import JoinableQueue as MpQueue
+from queue import Queue as MtQueue
 from typing import NamedTuple
 
 from udemy_autocoupons.courses_store import CoursesStore
@@ -29,17 +29,17 @@ class Enroller:
     def __init__(
         self,
         driver: UdemyDriver,
-        mp_queue: MpQueue,
+        mt_queue: MtQueue,
     ) -> None:
-        """Stores the given driver and mp_queue.
+        """Stores the given driver and mt_queue.
 
         Args:
             driver: The WebDriver to use.
-            mp_queue: The multiprocessing queue to get the courses from.
+            mt_queue: The multithreading queue to get the courses from.
 
         """
         self._driver = driver
-        self._mp_queue = mp_queue
+        self._mt_queue = mt_queue
 
         self._blacklist = CoursesStore()
         self._errors: set[CourseWithCoupon] = set()
@@ -61,16 +61,16 @@ class Enroller:
             error.
 
         """
-        while course := self._mp_queue.get():
+        while course := self._mt_queue.get():
             self._handle_enroll(course)
             _printer.info(
                 "Enroller: Approximately %s courses left.",
-                self._mp_queue.qsize() - 1,
+                self._mt_queue.qsize() - 1,
             )
-            self._mp_queue.task_done()
+            self._mt_queue.task_done()
 
-        _debug.debug("Got None in multiprocessing queue")
-        self._mp_queue.task_done()
+        _debug.debug("Got None in multithreading queue")
+        self._mt_queue.task_done()
 
         while self._reattempt_queue:
             course = self._reattempt_queue.popleft()
@@ -105,8 +105,8 @@ class Enroller:
             _debug.debug("Enroll finished for %s", course)
 
         _debug.debug(
-            "mp qsize is %s, reattempt queue size is %s",
-            self._mp_queue.qsize(),
+            "mt qsize is %s, reattempt queue size is %s",
+            self._mt_queue.qsize(),
             len(self._reattempt_queue),
         )
 

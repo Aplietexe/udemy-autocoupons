@@ -28,7 +28,7 @@ def setup_loggers() -> None:
         "debug",
         DEBUG,
         debug_handler,
-        "%(asctime)s %(levelname)s from %(filename)s %(funcName)s in %(processName)s - %(message)s",
+        "%(asctime)s %(levelname)s from %(filename)s %(funcName)s in %(threadName)s - %(message)s",
     )
 
     debug.debug("Loggers configured")

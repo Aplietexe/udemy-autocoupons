@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from asyncio import TaskGroup, run
 from logging import getLogger
-from multiprocessing import Process
+from threading import Thread
 
 from aiohttp import ClientSession
 
@@ -23,7 +23,7 @@ async def main() -> None:
 
     Scrapers get urls asynchronously and send them to a queue, where they
     are then validated, parsed and sent to another queue, where a listening
-    process uses a WebDriver to enroll in all provided courses.
+    thread uses a WebDriver to enroll in all provided courses.
 
     """
     debug = getLogger("debug")
@@ -34,15 +34,15 @@ async def main() -> None:
     args = parse_arguments()
 
     # Listen for urls in the async queue
-    async with QueueManager() as (async_queue, mp_queue):
-        # Listen for courses in the multiprocessing queue
-        process = Process(
+    async with QueueManager() as (async_queue, mt_queue):
+        # Listen for courses in the multithreading queue
+        thread = Thread(
             target=run_driver,
-            args=(mp_queue, args["profile_directory"], args["user_data_dir"]),
-            name="UdemyDriverProcess",
+            args=(mt_queue, args["profile_directory"], args["user_data_dir"]),
+            name="UdemyDriverThread",
         )
-        process.start()
-        debug.debug("UdemyDriverProcess started")
+        thread.start()
+        debug.debug("UdemyDriverThread started")
 
         async with ClientSession() as client:
             scrapers = tuple(
@@ -61,9 +61,9 @@ async def main() -> None:
             # Wait for scrapers to finish
             debug.debug("All scrapers finished")
     # Wait for queues to finish
-    # Wait for process to finish
-    debug.debug("Waiting for process to finish")
-    process.join()
+    # Wait for thread to finish
+    debug.debug("Waiting for thread to finish")
+    thread.join()
 
     save_scrapers_data(scrapers)
 
