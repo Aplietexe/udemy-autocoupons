@@ -2,15 +2,15 @@
 -r "flake8-plugin-requirements.txt"
 
 # Linting
-pylint==2.15.10
+pylint==2.17.2
 flake8==4.0.1
-bandit==1.7.4
-pyright==1.1.290
+bandit==1.7.5
+pyright==1.1.302
 pydocstyle==6.3.0
 
 # Formatting
-black==22.12.0
-isort==5.11.4
+black==23.3.0
+isort==5.12.0
 
 # Other tools
-pre-commit==2.21.0
+pre-commit==3.2.2

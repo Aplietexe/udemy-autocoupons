@@ -20,7 +20,7 @@ repos:
 
   ## INI
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v2.5.0
+    rev: v2.8.0
     hooks:
       - id: pretty-format-ini
         args: [--autofix]
@@ -39,12 +39,12 @@ repos:
         args: [--py36-plus]
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.11.4
+    rev: 5.12.0
     hooks:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 23.3.0
     hooks:
       - id: black
         args: [--config, .black.toml]
@@ -60,14 +60,14 @@ repos:
   # Checks
   ## YAML
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.29.0
+    rev: v1.30.0
     hooks:
       - id: yamllint
         args: [--strict]
 
   ## YAML, JSON
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.20.0
+    rev: 0.22.0
     hooks:
       - id: check-metaschema
         name: Check YAML and JSON files against their schema
@@ -82,7 +82,7 @@ repos:
 
   ## Python
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.15.10
+    rev: v2.17.2
     hooks:
       - id: pylint
         additional_dependencies:
@@ -96,7 +96,7 @@ repos:
       - id: pydocstyle
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.4
+    rev: 1.7.5
     hooks:
       - id: bandit
         args: [--ini, setup.cfg]
@@ -107,7 +107,7 @@ repos:
       - id: flake8
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.290
+    rev: v1.1.302
     hooks:
       - id: pyright
 
@@ -120,7 +120,7 @@ repos:
 
   ## All
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v6.17.1
+    rev: v6.31.0
     hooks:
       - id: cspell
 
