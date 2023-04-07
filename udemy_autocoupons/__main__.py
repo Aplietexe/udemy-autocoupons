@@ -40,6 +40,7 @@ async def main() -> None:
             target=run_driver,
             args=(mt_queue, args["profile_directory"], args["user_data_dir"]),
             name="UdemyDriverThread",
+            daemon=True,
         )
         thread.start()
         debug.debug("UdemyDriverThread started")

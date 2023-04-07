@@ -48,8 +48,11 @@ class QueueManager:
         _debug.debug("Entered QueueManager context manager")
         return (self.async_queue, self.mt_queue)
 
-    async def __aexit__(self, *_) -> None:
+    async def __aexit__(self, exc_type: type[BaseException] | None, *_) -> None:
         """Closes and waits the async and multithreading queue."""
+        if exc_type:
+            return
+
         await self.async_queue.put(None)
         _debug.debug("Waiting async queue")
         await self.async_queue.join()
