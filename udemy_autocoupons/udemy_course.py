@@ -71,8 +71,17 @@ class _UdemyCourse(ABC):
             The new Udemy Course if the URL is valid, None otherwise.
 
         """
-        parsed = urlparse(url)
-        query_params = parse_qs(parsed.query, strict_parsing=True)
+        try:
+            parsed = urlparse(url)
+        except ValueError:
+            _debug.debug("%s cannot be parsed as a URL", url)
+            return None
+
+        try:
+            query_params = parse_qs(parsed.query, strict_parsing=True)
+        except ValueError:
+            _debug.debug("%s cannot be parsed as a query string", parsed.query)
+            return None
 
         if not _UdemyCourse.verify(parsed.netloc, parsed.path):
             _debug.debug("%s cannot be parsed as a Udemy course", url)
