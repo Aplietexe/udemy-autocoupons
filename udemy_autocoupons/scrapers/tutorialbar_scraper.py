@@ -151,27 +151,30 @@ class TutorialbarScraper(Scraper):
 
                 json_res: list[_PostT] = await res.json()
 
-            if json_res:
-                self._new_last_date = json_res[-1]["date"]
-                _debug.debug(
-                    "Reassigning self._new_last_date to %s",
-                    self._new_last_date,
-                )
+            return self._process_json(json_res)
 
-            urls = None
+    def _process_json(self, json_res: list[_PostT]) -> list[str] | None:
+        urls = None
 
-            try:
-                urls = [post["acf"]["course_url"] for post in json_res]
-            except (KeyError, TypeError):
-                _debug.exception(
-                    "JSON response does not follow the expected format. Response was %s",
-                    json_res,
-                )
-                _printer.error(
-                    "ERROR extracting course urls from tutorialbar. Check logs.",
-                )
+        try:
+            urls = [post["acf"]["course_url"] for post in json_res]
+        except (KeyError, TypeError):
+            _debug.exception(
+                "JSON response does not follow the expected format. Response was %s",
+                json_res,
+            )
+            _printer.error(
+                "ERROR extracting course urls from tutorialbar. Check logs.",
+            )
 
-            return urls
+        if urls:
+            self._new_last_date = json_res[-1]["date"]
+            _debug.debug(
+                "Reassigning self._new_last_date to %s",
+                self._new_last_date,
+            )
+
+        return urls
 
     async def _enqueue_urls(self, urls: list[str]) -> None:
         for url in urls:
