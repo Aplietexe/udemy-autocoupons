@@ -4,6 +4,7 @@ from __future__ import annotations
 from asyncio import Queue as AsyncQueue, create_task
 from logging import getLogger
 from queue import Queue as MtQueue
+from threading import Event
 
 from udemy_autocoupons.courses_store import CoursesStore
 from udemy_autocoupons.udemy_course import CourseWithCoupon
@@ -21,7 +22,7 @@ class QueueManager:
     course to a multithreading JoinableQueue.
 
     On open it gives the async and multithreading queues, and on exit adds a
-    None to each and waits for them to finish.
+    None to each and waits for them to finish, as well as for the stop event.
 
     Attributes:
       mt_queue: The wrapped multithreading queue.
@@ -29,12 +30,13 @@ class QueueManager:
 
     """
 
-    def __init__(self, courses_store: CoursesStore) -> None:
+    def __init__(self, courses_store: CoursesStore, stop_event: Event) -> None:
         """Creates a queue and stores it in the queue attribute."""
         self.mt_queue: MtQueue[CourseWithCoupon | None] = MtQueue()
         self.async_queue: AsyncQueue[str | None] = AsyncQueue()
 
         self._courses_store = courses_store
+        self._stop_event = stop_event
         self._task = create_task(self._process_courses())
 
     async def __aenter__(
@@ -64,6 +66,9 @@ class QueueManager:
         self.mt_queue.put(None)
         _debug.debug("Waiting multithreading queue")
         self.mt_queue.join()
+
+        _debug.debug("Waiting stop event")
+        self._stop_event.wait()
 
         _debug.debug("Exiting QueueManager context manager")
 

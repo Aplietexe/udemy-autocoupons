@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from asyncio import TaskGroup, run
 from logging import getLogger
-from threading import Thread
+from threading import Event, Thread
 
 from aiohttp import ClientSession
 
@@ -11,8 +11,10 @@ from udemy_autocoupons.loggers import setup_loggers
 from udemy_autocoupons.parse_arguments import parse_arguments
 from udemy_autocoupons.persistent_data import (
     load_courses_store,
+    load_errors,
     load_scrapers_data,
     save_courses_store,
+    save_errors,
     save_scrapers_data,
 )
 from udemy_autocoupons.queue_manager import QueueManager
@@ -29,21 +31,37 @@ async def main() -> None:
 
     """
     debug = getLogger("debug")
+    printer = getLogger("printer")
+
     scrapers_data = load_scrapers_data()
     courses_store = load_courses_store()
+    errors = load_errors()
 
     debug.debug("Got scrapers data %s", scraper_types[0].__name__)
 
     args = parse_arguments()
 
+    stop_event = Event()
+
     # Listen for urls in the async queue
-    async with QueueManager(courses_store) as (async_queue, mt_queue):
+    async with QueueManager(courses_store, stop_event) as (
+        async_queue,
+        mt_queue,
+    ):
+        for error in errors:
+            mt_queue.put(error)
+
+        printer.info("Reattempting %s previously failed courses", len(errors))
+        errors.clear()
+
         # Listen for courses in the multithreading queue
         thread = Thread(
             target=run_driver,
             args=(
                 mt_queue,
                 courses_store,
+                errors,
+                stop_event,
                 args["profile_directory"],
                 args["user_data_dir"],
             ),
@@ -59,6 +77,7 @@ async def main() -> None:
                     async_queue,
                     client,
                     scrapers_data[scraper_type.__name__],
+                    stop_event,
                 )
                 for scraper_type in scraper_types
             )
@@ -76,6 +95,12 @@ async def main() -> None:
 
     save_scrapers_data(scrapers)
     save_courses_store(courses_store)
+    save_errors(errors)
+
+    printer.info(
+        "Finished run. %s courses will be reattempted on next run",
+        len(errors),
+    )
 
 
 if __name__ == "__main__":

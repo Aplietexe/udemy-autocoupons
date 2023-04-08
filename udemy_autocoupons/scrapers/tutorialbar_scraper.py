@@ -3,6 +3,7 @@ import asyncio
 from asyncio import Queue as AsyncQueue
 from datetime import datetime, timedelta
 from logging import getLogger
+from threading import Event
 from typing import TypedDict
 from zoneinfo import ZoneInfo
 
@@ -50,6 +51,7 @@ class TutorialbarScraper(Scraper):
         queue: AsyncQueue[str | None],
         client: ClientSession,
         persistent_data: _PersistentData | None,
+        stop_event: Event,
     ) -> None:
         """Stores provided manager, client and persistent data.
 
@@ -57,10 +59,12 @@ class TutorialbarScraper(Scraper):
           queue: An async queue where the urls will be added.
           client: An aiohttp client to use.
           persistent_data: The persistent data previously returned.
+          stop_event: An event that will be set on an early stop.
 
         """
         self._queue = queue
         self._client = client
+        self._stop_event = stop_event
 
         default_last_date = datetime.now(
             ZoneInfo("Asia/Kolkata"),  # Server timezone
