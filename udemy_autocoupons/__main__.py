@@ -10,7 +10,9 @@ from aiohttp import ClientSession
 from udemy_autocoupons.loggers import setup_loggers
 from udemy_autocoupons.parse_arguments import parse_arguments
 from udemy_autocoupons.persistent_data import (
+    load_courses_store,
     load_scrapers_data,
+    save_courses_store,
     save_scrapers_data,
 )
 from udemy_autocoupons.queue_manager import QueueManager
@@ -28,17 +30,23 @@ async def main() -> None:
     """
     debug = getLogger("debug")
     scrapers_data = load_scrapers_data()
+    courses_store = load_courses_store()
 
     debug.debug("Got scrapers data %s", scraper_types[0].__name__)
 
     args = parse_arguments()
 
     # Listen for urls in the async queue
-    async with QueueManager() as (async_queue, mt_queue):
+    async with QueueManager(courses_store) as (async_queue, mt_queue):
         # Listen for courses in the multithreading queue
         thread = Thread(
             target=run_driver,
-            args=(mt_queue, args["profile_directory"], args["user_data_dir"]),
+            args=(
+                mt_queue,
+                courses_store,
+                args["profile_directory"],
+                args["user_data_dir"],
+            ),
             name="UdemyDriverThread",
             daemon=True,
         )
@@ -67,6 +75,7 @@ async def main() -> None:
     thread.join()
 
     save_scrapers_data(scrapers)
+    save_courses_store(courses_store)
 
 
 if __name__ == "__main__":

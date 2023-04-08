@@ -5,6 +5,7 @@ from asyncio import Queue as AsyncQueue, create_task
 from logging import getLogger
 from queue import Queue as MtQueue
 
+from udemy_autocoupons.courses_store import CoursesStore
 from udemy_autocoupons.udemy_course import CourseWithCoupon
 
 _debug = getLogger("debug")
@@ -28,12 +29,12 @@ class QueueManager:
 
     """
 
-    def __init__(self) -> None:
+    def __init__(self, courses_store: CoursesStore) -> None:
         """Creates a queue and stores it in the queue attribute."""
         self.mt_queue: MtQueue[CourseWithCoupon | None] = MtQueue()
         self.async_queue: AsyncQueue[str | None] = AsyncQueue()
 
-        self._seen: set[CourseWithCoupon] = set()
+        self._courses_store = courses_store
         self._task = create_task(self._process_courses())
 
     async def __aenter__(
@@ -69,7 +70,7 @@ class QueueManager:
     async def _process_courses(self) -> None:
         while url := await self.async_queue.get():
             if course := CourseWithCoupon.from_url(url):
-                if course not in self._seen:
+                if course not in self._courses_store:
                     self.mt_queue.put(course)
                 else:
                     _debug.debug("Ignoring duplicate course %s", course)

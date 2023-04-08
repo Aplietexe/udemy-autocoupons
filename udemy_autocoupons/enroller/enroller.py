@@ -17,7 +17,6 @@ _debug = getLogger("debug")
 class RunResult(NamedTuple):
     """The result of the enroll_from_queue run."""
 
-    blacklist: CoursesStore
     errors: set[CourseWithCoupon]
 
 
@@ -30,18 +29,20 @@ class Enroller:
         self,
         driver: UdemyDriver,
         mt_queue: MtQueue,
+        courses_store: CoursesStore,
     ) -> None:
         """Stores the given driver and mt_queue.
 
         Args:
             driver: The WebDriver to use.
             mt_queue: The multithreading queue to get the courses from.
+            courses_store: The courses store to use.
 
         """
         self._driver = driver
         self._mt_queue = mt_queue
+        self._courses_store = courses_store
 
-        self._blacklist = CoursesStore()
         self._errors: set[CourseWithCoupon] = set()
 
         self._enrolled_counter = 0
@@ -84,10 +85,7 @@ class Enroller:
 
             self._handle_enroll(course)
 
-        run_result = RunResult(
-            self._blacklist,
-            self._errors,
-        )
+        run_result = RunResult(self._errors)
         _debug.debug("Run result was %s", run_result)
 
         _debug.debug("Enrolled in %s courses", self._enrolled_counter)
@@ -96,8 +94,8 @@ class Enroller:
         return run_result
 
     def _handle_enroll(self, course: CourseWithCoupon) -> None:
-        if course in self._blacklist:
-            _debug.debug("%s is blacklisted", course)
+        if course in self._courses_store:
+            _debug.debug("%s is already in store", course)
         else:
             state = self._driver.enroll(course)
             self._handle_state(course, state)
@@ -119,9 +117,9 @@ class Enroller:
             self._enrolled_counter += 1
 
         if state in {State.ENROLLED, State.TO_BLACKLIST}:
-            self._blacklist.add(course.with_any_coupon())
+            self._courses_store.add(course.with_any_coupon())
         elif state is State.PAID:
-            self._blacklist.add(course)
+            self._courses_store.add(course)
         # Only case left is ERROR
         elif self._attempts[course] < self._MAX_REATTEMPTS:
             self._attempts[course] += 1
