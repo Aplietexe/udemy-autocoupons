@@ -88,9 +88,12 @@ class CoursesStore(MutableSet):
     def optimize(self) -> None:
         """Optimizes the memory usage by removing redundant courses."""
         with self._lock:
+            to_remove = set()
             for specific_coupon in self._specific_coupon:
                 if specific_coupon.url_id in self._any_coupon:
-                    self._specific_coupon.remove(specific_coupon)
+                    to_remove.add(specific_coupon)
+
+            self._specific_coupon -= to_remove
 
     def create_compressed(self) -> tuple[str | tuple[str, str], ...]:
         """Creates a smaller representation of the store.
