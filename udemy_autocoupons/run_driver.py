@@ -1,7 +1,7 @@
 """Entry point for the package."""
 from __future__ import annotations
 
-from _thread import interrupt_main
+import os
 from logging import getLogger
 from queue import Queue as MtQueue
 
@@ -26,11 +26,14 @@ def run_driver(
         user_data_dir: The directory with the profile directory.
 
     """
+    debug = getLogger("debug")
+    printer = getLogger("printer")
     try:
         _run_driver(mt_queue, courses_store, profile_directory, user_data_dir)
     except:  # noqa: B001
-        interrupt_main()  # Propagate to main thread
-        raise
+        debug.exception("Error in run_driver")
+        printer.error("Error caught, quitting")
+        os._exit(1)
 
 
 def _run_driver(
