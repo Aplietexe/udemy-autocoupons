@@ -70,10 +70,7 @@ class QueueManager:
     async def _process_courses(self) -> None:
         while url := await self.async_queue.get():
             if course := CourseWithCoupon.from_url(url):
-                if course not in self._courses_store:
-                    self.mt_queue.put(course)
-                else:
-                    _debug.debug("Ignoring duplicate course %s", course)
+                self.mt_queue.put(course)
             self.async_queue.task_done()
 
         _debug.debug("Got None in async queue")
