@@ -90,6 +90,7 @@ repos:
           - undetected-chromedriver
           - aiohttp[speedups]
           - frozendict
+          - beautifulsoup4
 
   - repo: https://github.com/PyCQA/pydocstyle
     rev: 6.3.0
