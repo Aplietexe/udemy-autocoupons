@@ -9,6 +9,7 @@ from typing import Generic, TypedDict, TypeVar
 from aiohttp import ClientSession
 
 from udemy_autocoupons.constants import SCRAPER_WAIT
+from udemy_autocoupons.request_with_reattempts import request_with_reattempts
 
 
 class WordpressPost(TypedDict):
@@ -37,10 +38,6 @@ _debug = getLogger("debug")
 
 class WordpressScraper(Generic[_Post]):
     """Handles tutorialbar.com scraping."""
-
-    _LONG_WAIT = 5
-    _CODE_OK = 200
-    _MAX_ATTEMPTS = 5
 
     def __init__(
         self,
@@ -158,35 +155,17 @@ class WordpressScraper(Generic[_Post]):
             None otherwise.
 
         """
-        attempts = 0
-
-        while attempts < self._MAX_ATTEMPTS:
-            _debug.debug("Waiting request to %s", url)
-            async with self._client.get(url) as res:
-                if res.status != self._CODE_OK:
-                    _debug.debug(
-                        "Got code %s from %s. attempts == %s. Reattempting in %s",
-                        res.status,
-                        url,
-                        attempts,
-                        self._LONG_WAIT,
-                    )
-
-                    attempts += 1
-                    await asyncio.sleep(self._LONG_WAIT)
-                    continue
-
-                json_res: list[_Post] = await res.json()
-
-            return self._process_json(json_res)
-
-        _debug.debug(
-            "Request to %s failed %s times. Stopping scrapper.",
+        json_res: list[_Post] | None = await request_with_reattempts(
             url,
-            attempts,
+            "json",
+            self._client,
+            self._stop_event,
         )
 
-        return None
+        if not json_res:
+            return None
+
+        return self._process_json(json_res)
 
     def _process_json(self, json_res: list[_Post]) -> list[str] | None:
         """Validates and processes the json response.
