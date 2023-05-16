@@ -6,7 +6,7 @@ undetected-chromedriver==3.4.6
 aiohttp[speedups]==3.8.4
 
 # Misc
-frozendict==2.3.6
+frozendict==2.3.7
 
 # Windows compat
 tzdata==2023.3
