@@ -91,11 +91,6 @@ class Enroller:
             self._handle_enroll(course)
             self._mt_queue.task_done()
 
-            _printer.info(
-                "Enroller: Approximately %s courses left.",
-                self._mt_queue.qsize() - 1,
-            )
-
         _debug.debug("Got None in multithreading queue")
 
         while self._reattempt_queue:
@@ -135,6 +130,10 @@ class Enroller:
 
         if state is not State.ERROR:
             self._consecutive_errors = 0
+            _printer.info("Enrolled in %s", course.url_id)
+
+        if state in {State.TO_BLACKLIST, State.PAID}:
+            _printer.info("Skipping %s", course.url_id)
 
         if state in {State.ENROLLED, State.TO_BLACKLIST}:
             self._courses_store.add(course.with_any_coupon())
