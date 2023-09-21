@@ -5,7 +5,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from logging import getLogger
 from typing import Literal, TypeGuard, overload
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlsplit
 
 _debug = getLogger("debug")
 
@@ -72,7 +72,7 @@ class _UdemyCourse(ABC):
 
         """
         try:
-            parsed = urlparse(url)
+            parsed = urlsplit(url)
         except ValueError:
             _debug.debug("%s cannot be parsed as a URL", url)
             return None
