@@ -111,18 +111,19 @@ class FreebiesGlobalScraper(Scraper):
         return new_persistent_data
 
     async def _scrape_from_posts(self, urls: list[str]) -> None:
+        errored = False
         for url in urls:
-            if self._stop_event.is_set():
+            if self._stop_event.is_set() or errored:
                 self._pending.append(url)
-                return
 
             _printer.info("freebiesglobal.com: Checking url")
 
             await asyncio.sleep(SCRAPER_WAIT)
 
-            await self._scrape_from_post(url)
+            if await self._scrape_from_post(url) is False:
+                errored = True
 
-    async def _scrape_from_post(self, url: str) -> None:
+    async def _scrape_from_post(self, url: str) -> bool:
         """Processes a post url and sends it to the queue manager.
 
         Args:
@@ -140,7 +141,7 @@ class FreebiesGlobalScraper(Scraper):
 
         if html is None:
             self._pending.append(url)
-            return
+            return False
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -165,10 +166,12 @@ class FreebiesGlobalScraper(Scraper):
                 expired_notice,
                 udemy_tags,
             )
-            return
+            return True
 
         for tag in udemy_tags:
             link = tag.get("href")
             if isinstance(link, str):
                 _debug.debug("Sending %s to async queue", link)
                 await self._queue.put(link)
+
+        return True
