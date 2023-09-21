@@ -22,7 +22,7 @@ _debug = getLogger("debug")
 
 _CheckedStateT = Literal[State.PAID, State.TO_BLACKLIST, State.ENROLLABLE]
 
-_ExpectedConditionT = Callable[[Chrome], WebElement | Literal[False]]
+_ExpectedConditionT = Callable[[Chrome], WebElement | bool]
 
 
 class UdemyDriver:
@@ -41,6 +41,7 @@ class UdemyDriver:
         "FREE_BADGE": ".ud-badge-free",
         "PURCHASED": '[class*="purchase-info"]',
         "FREE_COURSE": '[class*="generic-purchase-section--free-course"]',
+        "PRICE_SELECTOR": '[data-purpose*="course-price-text"] span:not(.ud-sr-only)',
     }
 
     def __init__(self, profile_directory: str, user_data_dir: str) -> None:
@@ -221,14 +222,10 @@ class UdemyDriver:
             The state of the course.
 
         """
-        price_selector = (
-            '[data-purpose*="course-price-text"] span:not(.ud-sr-only)'
-        )
-
         self._wait.until(
             EC.any_of(
                 self._ec_located(self._SELECTORS["PURCHASED"]),
-                self._ec_located(price_selector),
+                self._ec_located(self._SELECTORS["PRICE_SELECTOR"]),
                 self._ec_located(self._SELECTORS["FREE_BADGE"]),
                 self._ec_located(self._SELECTORS["FREE_COURSE"]),
             ),
@@ -252,15 +249,10 @@ class UdemyDriver:
             return State.TO_BLACKLIST
 
         # Wait first so that we can then use find_element instead of nesting waits
-        self._wait_for(price_selector)
+        self._wait_for(self._SELECTORS["PRICE_SELECTOR"])
 
         # Sometimes the element renders before its text
-        price_text: str = self._wait.until(
-            lambda driver: driver.find_element(
-                By.CSS_SELECTOR,
-                price_selector,
-            ).text,
-        )
+        price_text: str = self._wait.until(self._get_price)
 
         _debug.debug("price_text is %s", price_text)
 
@@ -304,6 +296,18 @@ class UdemyDriver:
             if total_amount_text.startswith("0")
             else State.PAID
         )
+
+    def _get_price(self, driver: Chrome) -> str | None:
+        elements = driver.find_elements(
+            By.CSS_SELECTOR,
+            self._SELECTORS["PRICE_SELECTOR"],
+        )
+        _debug.debug("Found %s price elements: %s", len(elements), elements)
+        for element in elements:
+            if element.text:
+                return element.text
+
+        return None
 
     def _wait_for(self, css_selector: str) -> WebElement:
         """Waits until the element with the given CSS selector is located.
