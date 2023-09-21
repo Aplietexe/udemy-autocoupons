@@ -5,7 +5,7 @@ from logging import getLogger
 from threading import Event
 from typing import Any, Literal
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError, ClientSession, ClientTimeout
 
 _debug = getLogger("debug")
 
@@ -17,6 +17,9 @@ class BadStatusCodeError(Exception):
         """Stores the status code."""
         super().__init__(f"Bad status code: {status_code}")
         self.status_code = status_code
+
+
+timeout = ClientTimeout(total=10)
 
 
 async def request_with_reattempts(
@@ -55,7 +58,7 @@ async def request_with_reattempts(
 
         try:
             res_body = await _send_req(url, content_type, client)
-        except (ClientError, BadStatusCodeError):
+        except (ClientError, BadStatusCodeError, TimeoutError):
             _debug.exception("Error requesting %s. attempts: %s", url, attempts)
 
             attempts += 1
@@ -88,7 +91,7 @@ async def _send_req(
         BadStatusCodeError: If the request returns a bad status code.
 
     """
-    async with client.get(url) as res:
+    async with client.get(url, timeout=timeout) as res:
         if not res.ok:
             _debug.debug("Got code %s from %s", res.status, url)
             raise BadStatusCodeError(res.status)
