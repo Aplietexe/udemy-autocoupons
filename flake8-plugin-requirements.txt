@@ -2,7 +2,6 @@
 dlint==0.14.0 # Best practices and security
 flake8-bugbear==22.12.6 # Bugs and design problems
 flake8-pie==0.16.0
-hacking==5.0.0
 flake8-simplify==0.20.0 # Simplifies code
 wemake-python-styleguide==0.17.0
 
@@ -11,8 +10,6 @@ flake8-2020==1.6.1 # Misuse of sys.version or sys.version_info
 flake8-async==22.11.14 # Bad async / asyncio practices
 flake8-encodings==0.5.0.post1 # Incorrect use of encodings
 flake8-secure-coding-standard==1.4.0
-flake8-slots==0.1.5 # Require __slots__ to be defined for subclasses of immutable types
-flake8-strftime==0.3.2 # Platform-specific strftime codes
 flake8-string-format==0.3.0 # Indexed parameters are used in strings
 flake8-warnings==0.4.0 # Deprecated modules, classes, and functions
 flake8-mutable==1.2.0 # Mutable default arguments
