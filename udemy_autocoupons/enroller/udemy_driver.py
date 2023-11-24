@@ -8,6 +8,7 @@ from typing import Literal
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
 from selenium.webdriver.support.wait import WebDriverWait
@@ -21,8 +22,6 @@ _printer = getLogger("printer")
 _debug = getLogger("debug")
 
 _CheckedStateT = Literal[State.PAID, State.TO_BLACKLIST, State.ENROLLABLE]
-
-_ExpectedConditionT = Callable[[Chrome], WebElement | bool]
 
 
 class UdemyDriver:
@@ -275,7 +274,9 @@ class UdemyDriver:
             EC.any_of(
                 EC.url_contains("/learn/lecture/"),
                 EC.url_contains("/cart/subscribe/course/"),
-                self._ec_located(total_amount_locator),
+                lambda driver: bool(
+                    self._ec_located(total_amount_locator)(driver),
+                ),
             ),
         )
 
@@ -297,7 +298,7 @@ class UdemyDriver:
             else State.PAID
         )
 
-    def _get_price(self, driver: Chrome) -> str | None:
+    def _get_price(self, driver: WebDriver) -> str | Literal[False]:
         elements = driver.find_elements(
             By.CSS_SELECTOR,
             self._SELECTORS["PRICE_SELECTOR"],
@@ -307,7 +308,7 @@ class UdemyDriver:
             if element.text:
                 return element.text
 
-        return None
+        return False
 
     def _wait_for(self, css_selector: str) -> WebElement:
         """Waits until the element with the given CSS selector is located.
@@ -361,7 +362,7 @@ class UdemyDriver:
         return self.driver.find_elements(By.CSS_SELECTOR, css_selector)
 
     @staticmethod
-    def _ec_located(css_selector: str) -> _ExpectedConditionT:
+    def _ec_located(css_selector: str) -> Callable[[WebDriver], WebElement]:
         """Creates an expected condition for locating the given selector.
 
         Args:
@@ -374,7 +375,9 @@ class UdemyDriver:
         return EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
 
     @staticmethod
-    def _ec_clickable(css_selector: str) -> _ExpectedConditionT:
+    def _ec_clickable(
+        css_selector: str,
+    ) -> Callable[[WebDriver], WebElement | Literal[False]]:
         """Creates an expected condition for the given selector to be clickable.
 
         Args:
@@ -389,7 +392,7 @@ class UdemyDriver:
     @staticmethod
     def _cursor_to_be_allowed(
         css_selector: str,
-        driver: Chrome,
+        driver: WebDriver,
     ) -> WebElement | Literal[False]:
         """An expected condition for the cursor to be allowed.
 
@@ -406,7 +409,10 @@ class UdemyDriver:
         return False
 
     @classmethod
-    def _ec_cursor_allowed(cls, css_selector: str) -> _ExpectedConditionT:
+    def _ec_cursor_allowed(
+        cls,
+        css_selector: str,
+    ) -> Callable[[WebDriver], WebElement | Literal[False]]:
         """Creates an expected condition for the cursor to be allowed.
 
         Args:
