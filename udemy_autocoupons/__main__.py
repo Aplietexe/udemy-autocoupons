@@ -19,7 +19,7 @@ from udemy_autocoupons.persistent_data import (
 )
 from udemy_autocoupons.queue_manager import QueueManager
 from udemy_autocoupons.run_driver import run_driver
-from udemy_autocoupons.scrapers import scraper_types
+from udemy_autocoupons.scrapers import ScrapersT, scraper_types
 
 
 async def main() -> None:
@@ -72,7 +72,7 @@ async def main() -> None:
         debug.debug("UdemyDriverThread started")
 
         async with ClientSession() as client:
-            scrapers = tuple(
+            scrapers: ScrapersT = tuple(
                 scraper_type(
                     async_queue,
                     client,
@@ -80,7 +80,7 @@ async def main() -> None:
                     stop_event,
                 )
                 for scraper_type in scraper_types
-            )
+            )  # type: ignore
 
             async with TaskGroup() as task_group:
                 # Start scrapers

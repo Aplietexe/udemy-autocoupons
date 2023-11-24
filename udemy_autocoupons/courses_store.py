@@ -112,7 +112,7 @@ class CoursesStore(MutableSet):
             return tuple(self._any_coupon.keys()) + tuple(
                 astuple(specific_coupon)
                 for specific_coupon in self._specific_coupon
-            )
+            )  # type: ignore
 
     def load_compressed(
         self,
