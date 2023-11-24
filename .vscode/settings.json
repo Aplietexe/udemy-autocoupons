@@ -1,30 +1,30 @@
 {
-  "python.formatting.provider": "black",
-  "python.formatting.blackArgs": ["--config", ".black.toml"],
-  "python.languageServer": "Pylance",
-  "python.analysis.typeCheckingMode": "basic",
-  "python.linting.pylintEnabled": true,
-  "python.linting.flake8Enabled": true,
-  "python.linting.pydocstyleEnabled": true,
-  "python.linting.banditEnabled": true,
-  "python.linting.banditArgs": ["--ini", "setup.cfg"],
-  "python.linting.pylintCategorySeverity.refactor": "Warning",
-  "python.linting.pylintCategorySeverity.convention": "Warning",
-  "isort.importStrategy": "fromEnvironment",
-  "[markdown]": {
-    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-  },
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.python"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "yaml.format.proseWrap": "always",
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "yaml.schemas": {
-    "https://json.schemastore.org/pre-commit-config.json": ".github/pre-commit-ci-config.yaml"
-  }
+    "black-formatter.args": ["--config", ".black.toml"],
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic",
+    "pylint.severity": {
+        "convention": "Warning",
+        "error": "Error",
+        "fatal": "Error",
+        "refactor": "Warning",
+        "warning": "Warning",
+        "info": "Warning"
+    },
+    "isort.importStrategy": "fromEnvironment",
+    "[markdown]": {
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "yaml.format.proseWrap": "always",
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "yaml.schemas": {
+        "https://json.schemastore.org/pre-commit-config.json": ".github/pre-commit-ci-config.yaml"
+    }
 }
