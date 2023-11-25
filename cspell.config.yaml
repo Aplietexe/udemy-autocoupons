@@ -35,6 +35,7 @@ words:
   - undetectability
   - unpickler
   - wemake
+  - yarl
 ignorePaths:
   - typings
   - .git

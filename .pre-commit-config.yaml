@@ -88,6 +88,8 @@ repos:
           - selenium==4.15.2
           - undetected-chromedriver==3.5.4
           - aiohttp[speedups]==3.9.0
+          - urlextract==1.8.0
+          - yarl==1.9.3
           - Telethon==1.32.1
           - cryptg==0.4.0
           - python-dotenv==1.0.0
