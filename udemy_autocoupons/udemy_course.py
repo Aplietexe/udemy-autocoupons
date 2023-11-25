@@ -71,6 +71,7 @@ class _UdemyCourse(ABC):
             The new Udemy Course if the URL is valid, None otherwise.
 
         """
+        url = url.encode("ascii", "ignore").decode("ascii")
         try:
             parsed = urlsplit(url)
         except ValueError:
