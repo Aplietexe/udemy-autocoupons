@@ -12,6 +12,7 @@ words:
   - datetimez
   - davidanson
   - dlint
+  - dotenv
   - esbenp
   - fstring
   - gemnasium

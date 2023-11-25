@@ -6,6 +6,7 @@ from logging import getLogger
 from threading import Event, Thread
 
 from aiohttp import ClientSession
+from dotenv import load_dotenv
 
 from udemy_autocoupons.loggers import setup_loggers
 from udemy_autocoupons.parse_arguments import parse_arguments
@@ -104,5 +105,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     setup_loggers()
     run(main())
