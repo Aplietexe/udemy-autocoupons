@@ -5,3 +5,5 @@ __pycache__
 target
 data
 .skjold_cache
+.env
+telegram_session.session*

@@ -21,6 +21,7 @@ from udemy_autocoupons.persistent_data import (
 from udemy_autocoupons.queue_manager import QueueManager
 from udemy_autocoupons.run_driver import run_driver
 from udemy_autocoupons.scrapers import ScrapersT, scraper_types
+from udemy_autocoupons.setup.setup_telegram import setup_telegram
 
 
 async def main() -> None:
@@ -33,14 +34,17 @@ async def main() -> None:
     """
     debug = getLogger("debug")
     printer = getLogger("printer")
+    args = parse_arguments()
+
+    if args["setup"] == "telegram":
+        await setup_telegram()
+        return
 
     scrapers_data = load_scrapers_data()
     courses_store = load_courses_store()
     errors = load_errors()
 
     debug.debug("Got scrapers data %s", scraper_types[0].__name__)
-
-    args = parse_arguments()
 
     stop_event = Event()
 

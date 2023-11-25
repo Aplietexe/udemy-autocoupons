@@ -11,6 +11,7 @@ class ParsedArguments(TypedDict):
 
     profile_directory: str
     user_data_dir: str
+    setup: str
 
 
 DIRECTORIES_BY_SYSTEM = frozendict(
@@ -35,10 +36,12 @@ def parse_arguments() -> ParsedArguments:
         "--user-data-dir",
         default=DIRECTORIES_BY_SYSTEM[system()],
     )
+    parser.add_argument("--setup", choices=["telegram"])
 
     args = parser.parse_args()
 
     return {
         "profile_directory": args.profile_directory,
         "user_data_dir": args.user_data_dir,
+        "setup": args.setup,
     }
