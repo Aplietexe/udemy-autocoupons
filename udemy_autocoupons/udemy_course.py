@@ -5,7 +5,8 @@ from abc import ABC
 from dataclasses import dataclass, field
 from logging import getLogger
 from typing import Literal, TypeGuard, overload
-from urllib.parse import parse_qs, urlsplit
+
+from yarl import URL
 
 _debug = getLogger("debug")
 
@@ -45,7 +46,7 @@ class _UdemyCourse(ABC):
     @overload
     @staticmethod
     def from_url(
-        url: str,
+        url_str: str,
         any_coupon: Literal[False] = False,
     ) -> CourseWithCoupon | None:
         ...
@@ -53,17 +54,17 @@ class _UdemyCourse(ABC):
     @overload
     @staticmethod
     def from_url(
-        url: str,
+        url_str: str,
         any_coupon: Literal[True],
     ) -> CourseWithAnyCoupon | None:
         ...
 
     @staticmethod
-    def from_url(url: str, any_coupon: bool = False) -> UdemyCourseT | None:
+    def from_url(url_str: str, any_coupon: bool = False) -> UdemyCourseT | None:
         """Create a new UdemyCourse from its URL.
 
         Args:
-            url: The course URL.
+            url_str: The course URL.
             any_coupon: Whether the course should be UdemyCourseWithAnyCoupon or
             UdemyCourseWithSpecificCoupon
 
@@ -71,58 +72,25 @@ class _UdemyCourse(ABC):
             The new Udemy Course if the URL is valid, None otherwise.
 
         """
-        url = url.encode("ascii", "ignore").decode("ascii")
-        try:
-            parsed = urlsplit(url)
-        except ValueError:
-            _debug.debug("%s cannot be parsed as a URL", url)
+        url_str = url_str.encode("ascii", "ignore").decode("ascii")
+        url = URL(url_str)
+
+        if url.host not in {"udemy.com", "www.udemy.com"} or len(url.path) < 2:
+            _debug.debug("%s cannot be parsed as a Udemy course", url_str)
             return None
 
-        try:
-            query_params = parse_qs(parsed.query, strict_parsing=True)
-        except ValueError:
-            _debug.debug("%s cannot be parsed as a query string", parsed.query)
+        url_parts = url.path.split("/")
+        if url_parts[1] != "course" and len(url_parts) <= 2:
+            _debug.debug("%s cannot be parsed as a Udemy course", url_str)
             return None
 
-        if not _UdemyCourse.verify(parsed.netloc, parsed.path):
-            _debug.debug("%s cannot be parsed as a Udemy course", url)
-            return None
-
-        # 0 is '', 1 is 'course', 2 is the url_id
-        url_id = parsed.path.split("/")[2]
+        url_id = url_parts[2] if url_parts[1] == "course" else url_parts[1]
 
         if any_coupon:
             return CourseWithAnyCoupon(url_id)
 
-        coupon = None
-
-        if coupon_query_param := query_params.get("couponCode"):
-            coupon = coupon_query_param[0]
-
+        coupon = url.query.get("couponCode")
         return CourseWithCoupon(url_id, coupon)
-
-    @staticmethod
-    def verify(netloc: str, path: str) -> bool:
-        """Verifies that netloc and path match a valid Udemy Course URL.
-
-        Args:
-            netloc: netloc as returned by urllib.parse.urlparse.
-            path: path as returned by urllib.parse.urlparse.
-
-        Returns:
-            True if the arguments correspond to a valid Udemy Course URL, false
-            otherwise.
-
-        """
-        is_udemy = netloc in {"udemy.com", "www.udemy.com"}
-
-        # Avoid using regex
-        has_course_url_id = (
-            path.startswith("/course/")
-            and len(path) > 8  # len('/course/') == 8
-        )
-
-        return is_udemy and has_course_url_id
 
 
 @dataclass(frozen=True, slots=True)
