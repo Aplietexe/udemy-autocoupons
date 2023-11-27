@@ -36,11 +36,11 @@ class UdemyDriver:
     """
 
     _SELECTORS = {
-        "ENROLL_BUTTON": '[data-purpose*="buy-this-course-button"]',
-        "FREE_BADGE": ".ud-badge-free",
+        "ENROLL_BUTTON": '[class*="sidebar-container--content"] [data-purpose*="buy-this-course-button"].ud-btn-primary',
+        "FREE_BADGE": '.ud-badge-free, [class*="course-badges-module--free"]',
         "PURCHASED": '[class*="purchase-info"]',
         "FREE_COURSE": '[class*="generic-purchase-section--free-course"]',
-        "PRICE_SELECTOR": '[data-purpose*="course-price-text"] span:not(.ud-sr-only)',
+        "PRICE_SELECTOR": '[class*="sidebar-container--content"] [data-purpose*="course-price-text"] span:not(.ud-sr-only)',
     }
 
     def __init__(self, profile_directory: str, user_data_dir: str) -> None:
@@ -110,8 +110,10 @@ class UdemyDriver:
             _debug.debug("_get_course_state is %s for %s", state, course.url)
             return state
 
+        _debug.debug("Waiting for enroll button clickable")
         self._wait_for_clickable(self._SELECTORS["ENROLL_BUTTON"]).click()
 
+        _debug.debug("Checking if checkout is correct")
         if (state := self._checkout_is_correct()) != State.ENROLLABLE:
             # This is only intended as a safeguard, the execution should never
             # hit this branch
@@ -126,6 +128,7 @@ class UdemyDriver:
             '[class*="checkout-button--checkout-button--button"]'
         )
 
+        _debug.debug("Waiting for checkout button clickable")
         self._wait.until(
             EC.all_of(
                 self._ec_clickable(checkout_button_selector),
@@ -163,6 +166,7 @@ class UdemyDriver:
             self._ec_located(self._SELECTORS["ENROLL_BUTTON"]),
             self._ec_located(self._SELECTORS["FREE_BADGE"]),
             self._ec_located(self._SELECTORS["PURCHASED"]),
+            self._ec_located(self._SELECTORS["FREE_COURSE"]),
         ]
 
         if course.coupon:
