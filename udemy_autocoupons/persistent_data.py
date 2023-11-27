@@ -104,8 +104,6 @@ def _save_persistent(filename: str, to_persist: Any) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
 
-    _debug.debug("Saving %s", to_persist)
-
     with path.open("wb") as pickle_file:
         pickler = Pickler(pickle_file, 4)
 
@@ -130,8 +128,4 @@ def _load_persistent(filename: str) -> Any | None:
 
     with path.open("rb") as pickle_file:
         pickler = Unpickler(pickle_file)
-        previous_persistent_data = pickler.load()
-
-        _debug.debug("Loaded %s", previous_persistent_data)
-
-        return previous_persistent_data
+        return pickler.load()
