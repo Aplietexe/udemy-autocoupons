@@ -115,6 +115,7 @@ class FreebiesGlobalScraper(Scraper):
         for url in urls:
             if self._stop_event.is_set() or errored:
                 self._pending.append(url)
+                continue
 
             _printer.info("freebiesglobal.com: Checking url")
 
@@ -137,6 +138,8 @@ class FreebiesGlobalScraper(Scraper):
             "text",
             self._client,
             self._stop_event,
+            max_attempts=3,
+            wait=3,
         )
 
         if html is None:
