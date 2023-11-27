@@ -23,7 +23,7 @@ def setup_loggers() -> None:
         "%H:%M:%S",
     )
 
-    debug_handler = FileHandler("log.log")
+    debug_handler = FileHandler("log.log", encoding="utf-8")
     debug = create_logger(
         "debug",
         DEBUG,
