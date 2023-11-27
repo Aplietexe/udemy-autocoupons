@@ -3,6 +3,7 @@
 from collections import defaultdict, deque
 from logging import getLogger
 from queue import Queue as MtQueue
+from threading import Event
 
 from udemy_autocoupons.courses_store import CoursesStore
 from udemy_autocoupons.enroller.state import DoneOrErrorT, State
@@ -28,6 +29,7 @@ class Enroller:
         driver: UdemyDriver,
         mt_queue: MtQueue,
         courses_store: CoursesStore,
+        stop_event: Event,
     ) -> None:
         """Stores the given driver and mt_queue.
 
@@ -41,6 +43,7 @@ class Enroller:
         self._driver = driver
         self._mt_queue = mt_queue
         self._courses_store = courses_store
+        self._stop_event = stop_event
 
         self._errors: list[CourseWithCoupon] = []
 
@@ -62,6 +65,7 @@ class Enroller:
         try:
             self._enroll_from_queue()
         except ConsecutiveErrors:
+            self._stop_event.set()
             self._errors.extend(self._reattempt_queue)
 
             while course := self._mt_queue.get():
@@ -129,8 +133,10 @@ class Enroller:
             self._enrolled_counter += 1
 
         if state is not State.ERROR:
-            self._consecutive_errors = 0
             _printer.info("Enrolled in %s", course.url_id)
+
+        if state in {State.ENROLLED, State.PAID}:
+            self._consecutive_errors = 0
 
         if state in {State.TO_BLACKLIST, State.PAID}:
             _printer.info("Skipping %s", course.url_id)
@@ -145,6 +151,12 @@ class Enroller:
 
     def _handle_error(self, course: CourseWithCoupon) -> None:
         self._consecutive_errors += 1
+
+        _debug.debug(
+            "Error %s, consecutive errors is %s",
+            course,
+            self._consecutive_errors,
+        )
 
         if self._consecutive_errors > self._MAX_CONSECUTIVE_ERRORS:
             self._errors.append(course)

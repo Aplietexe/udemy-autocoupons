@@ -72,7 +72,7 @@ def _run_driver(
 
     driver = UdemyDriver(profile_directory, user_data_dir)
 
-    enroller = Enroller(driver, mt_queue, courses_store)
+    enroller = Enroller(driver, mt_queue, courses_store, stop_event)
     new_errors = enroller.enroll_from_queue()
     errors.extend(new_errors)
 
@@ -82,4 +82,5 @@ def _run_driver(
 
     driver.quit()
 
-    stop_event.set()
+    if not stop_event.is_set():
+        stop_event.set()
