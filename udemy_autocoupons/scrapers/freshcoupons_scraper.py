@@ -94,6 +94,9 @@ class FreshcouponsScraper(Scraper):
             if course.discounted_price == "Free" and not course.is_already_free:
                 await self._queue.put(course.url)
 
+    def create_persistent_data(self) -> None:
+        """Creates the persistent data for this scraper."""
+
     async def _request_timestamp(self) -> str | None:
         """Gets the timestamp from the meta.json file.
 
