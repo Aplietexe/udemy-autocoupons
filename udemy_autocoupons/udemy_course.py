@@ -1,4 +1,5 @@
 """This module contains the UdemyCourse class."""
+
 from __future__ import annotations
 
 from abc import ABC
@@ -48,16 +49,14 @@ class _UdemyCourse(ABC):
     def from_url(
         url_str: str,
         any_coupon: Literal[False] = False,
-    ) -> CourseWithCoupon | None:
-        ...
+    ) -> CourseWithCoupon | None: ...
 
     @overload
     @staticmethod
     def from_url(
         url_str: str,
         any_coupon: Literal[True],
-    ) -> CourseWithAnyCoupon | None:
-        ...
+    ) -> CourseWithAnyCoupon | None: ...
 
     @staticmethod
     def from_url(url_str: str, any_coupon: bool = False) -> UdemyCourseT | None:

@@ -1,4 +1,5 @@
 """This package contains all scrapers."""
+
 from udemy_autocoupons.scrapers.freebiesglobal_scraper import (
     FreebiesGlobalScraper,
 )

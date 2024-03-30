@@ -1,18 +1,18 @@
 # To enroll
-selenium==4.15.2
-undetected-chromedriver==3.5.4
+selenium==4.19.0
+undetected-chromedriver==3.5.5
 
 # To scrap
-aiohttp[speedups]==3.9.0
-urlextract==1.8.0
-yarl==1.9.3
-Telethon==1.32.1
+aiohttp[speedups]==3.9.3
+urlextract==1.9.0
+yarl==1.9.4
+Telethon==1.34.0
 cryptg==0.4.0
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 
 # Misc
-frozendict==2.3.9
-python-dotenv==1.0.0
+frozendict==2.4.0
+python-dotenv==1.0.1
 
 # Windows compat
-tzdata==2023.3
+tzdata==2024.1

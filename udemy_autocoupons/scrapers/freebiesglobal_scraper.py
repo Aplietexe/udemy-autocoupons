@@ -1,4 +1,5 @@
 """This module contains the FreebiesGlobalScraper scraper."""
+
 import asyncio
 from asyncio import Queue as AsyncQueue
 from logging import getLogger
@@ -67,9 +68,9 @@ class FreebiesGlobalScraper(Scraper):
 
         self._wordpress_scraper: WordpressScraper[_Post] = WordpressScraper(
             client=client,
-            persistent_data=persistent_data["wordpress"]
-            if persistent_data
-            else None,
+            persistent_data=(
+                persistent_data["wordpress"] if persistent_data else None
+            ),
             stop_event=stop_event,
             server_time_offset=-2,
             default_days=self._DEFAULT_DAYS,

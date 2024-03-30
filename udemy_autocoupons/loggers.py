@@ -1,4 +1,5 @@
 """This file contains the logic for setting up logging."""
+
 import sys
 from logging import (
     DEBUG,

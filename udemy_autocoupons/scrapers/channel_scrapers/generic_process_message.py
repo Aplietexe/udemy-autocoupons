@@ -1,4 +1,5 @@
 """Scraper for the iDownloadCoupon channel."""
+
 import re
 from asyncio import Semaphore, Task, TaskGroup
 from collections import defaultdict

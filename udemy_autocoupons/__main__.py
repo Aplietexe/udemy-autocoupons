@@ -1,4 +1,5 @@
 """Entry point for the package."""
+
 from __future__ import annotations
 
 from asyncio import TaskGroup, run

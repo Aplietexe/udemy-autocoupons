@@ -1,4 +1,5 @@
 """A module that contains all the generic scrapers for the channels."""
+
 from udemy_autocoupons.scrapers.channel_scrapers.channel_scraper import (
     ChannelScraper,
 )

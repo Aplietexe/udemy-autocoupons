@@ -1,4 +1,5 @@
 """This module contains the TelegramScraper scraper."""
+
 from asyncio import Queue as AsyncQueue, Semaphore, Task, TaskGroup
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone

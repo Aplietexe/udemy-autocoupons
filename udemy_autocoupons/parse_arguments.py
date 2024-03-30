@@ -1,4 +1,5 @@
 """This module exports the parse_arguments function."""
+
 from argparse import ArgumentParser
 from platform import system
 from typing import TypedDict

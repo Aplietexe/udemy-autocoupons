@@ -1,4 +1,5 @@
 """This module contains the TutorialbarScraper scraper."""
+
 from asyncio import Queue as AsyncQueue
 from logging import getLogger
 from threading import Event

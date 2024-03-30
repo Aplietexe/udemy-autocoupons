@@ -10,8 +10,8 @@ jobs:
     name: Check YAML files are formatted with Prettier
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.{yaml,yml}"
@@ -20,15 +20,15 @@ jobs:
           dry: true
           prettier_options: >-
             --check ${{ steps.changed-files.outputs.all_changed_files }}
-          prettier_version: 2.7.1
+          prettier_version: 3.1.0
         if: steps.changed-files.outputs.all_changed_files != ''
 
   yamllint:
     name: Lint YAML files with yamllint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.{yaml,yml}"
@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install yamllint==1.33.0
+          python -m pip install yamllint==1.35.1
           yamllint --strict ${{ steps.changed-files.outputs.all_changed_files }}
         if: steps.changed-files.outputs.all_changed_files != ''
 
@@ -47,8 +47,8 @@ jobs:
     name: Check GitHub workflows against their schema
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: .github/workflows/*.{yaml,yml}
@@ -65,8 +65,8 @@ jobs:
     name: Check YAML and JSON files against their schema
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.{json,jsonc,yaml,yml}"
@@ -78,7 +78,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run check-metaschema --config
           .github/pre-commit-ci-config.yaml --files ${{
@@ -89,8 +89,8 @@ jobs:
     name: Check TOML syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.toml"
@@ -101,7 +101,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run check-toml --config .github/pre-commit-ci-config.yaml
           --files ${{ steps.changed-files.outputs.all_changed_files }}
@@ -111,8 +111,8 @@ jobs:
     name: Lint markdown files with markdownlint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.md"
@@ -123,7 +123,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run markdownlint --config .github/pre-commit-ci-config.yaml
           --files ${{ steps.changed-files.outputs.all_changed_files }}
@@ -133,8 +133,8 @@ jobs:
     name: Check ini files are formatted
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.{ini,cfg}"
@@ -145,7 +145,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run pretty-format-ini --config
           .github/pre-commit-ci-config.yaml --files ${{
@@ -156,8 +156,8 @@ jobs:
     name: Check code complies with pyupgrade
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -168,7 +168,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run pyupgrade --config .github/pre-commit-ci-config.yaml
           --files ${{ steps.changed-files.outputs.all_changed_files }}
@@ -177,8 +177,8 @@ jobs:
     name: Check code complies with isort
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -199,8 +199,8 @@ jobs:
     name: Check code complies with black formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -211,7 +211,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install black==23.11.0
+          python -m pip install black==24.3.0
       - run: >-
           black --config .black.toml --check --diff --color --verbose --fast ${{
           steps.changed-files.outputs.all_changed_files }}
@@ -221,8 +221,8 @@ jobs:
     name: Lint code with pylint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -234,7 +234,7 @@ jobs:
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
           python -m pip install -r requirements.txt
-          python -m pip install pylint==3.0.2
+          python -m pip install pylint==3.1.0
       - run: >-
           pylint --persistent=no --verbose --jobs=0 --output-format=colorized
           --reports=yes ${{ steps.changed-files.outputs.all_changed_files }}
@@ -244,8 +244,8 @@ jobs:
     name: Lint code with pydocstyle
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -265,8 +265,8 @@ jobs:
     name: Lint code with bandit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -277,7 +277,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install bandit==1.7.5
+          python -m pip install bandit==1.7.8
       - run: >-
           bandit --ini setup.cfg ${{
           steps.changed-files.outputs.all_changed_files }}
@@ -287,8 +287,8 @@ jobs:
     name: Lint code with flake8
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -299,7 +299,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install flake8==6.1.0
+          python -m pip install flake8==7.0.0
           python -m pip install -r flake8-plugin-requirements.txt
           flake8 ${{ steps.changed-files.outputs.all_changed_files }}
 
@@ -307,8 +307,8 @@ jobs:
     name: Lint code with pyright
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: "**/*.py"
@@ -317,7 +317,7 @@ jobs:
           python-version: "3.11"
       # pyrightconf.json expects a virtual environment in .venv
       - run: |
-          python -m pip install pyright==1.1.337
+          python -m pip install pyright==1.1.356
           python -m venv .venv
           source .venv/bin/activate
           python -m pip install --upgrade pip
@@ -333,8 +333,8 @@ jobs:
     name: Check dependencies for vulnerabilities with Skjold
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
         with:
           files: requirements.txt
@@ -354,8 +354,8 @@ jobs:
     name: Check there is no trailing whitespace
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
       - uses: actions/setup-python@v4
         with:
@@ -364,7 +364,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run trailing-whitespace --config
           .github/pre-commit-ci-config.yaml --files ${{
@@ -374,8 +374,8 @@ jobs:
     name: Check code EOL is LF
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
       - uses: actions/setup-python@v4
         with:
@@ -384,7 +384,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run mixed-line-ending --config
           .github/pre-commit-ci-config.yaml --files ${{
@@ -394,7 +394,7 @@ jobs:
     name: Lint with CSpell
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: streetsidesoftware/cspell-action@v2
         with:
           check_dot_files: "true"
@@ -405,8 +405,8 @@ jobs:
     name: Check for files that could cause conflicts in case-insensitive systems
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
       - uses: actions/setup-python@v4
         with:
@@ -415,7 +415,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run check-case-conflict --config
           .github/pre-commit-ci-config.yaml --files ${{
@@ -425,8 +425,8 @@ jobs:
     name: Check for files with merge conflict strings
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: tj-actions/changed-files@v35
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
         id: changed-files
       - uses: actions/setup-python@v4
         with:
@@ -435,7 +435,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
           python -m pip install --upgrade wheel
-          python -m pip install pre-commit==3.5.0
+          python -m pip install pre-commit==3.7.0
       - run: >-
           pre-commit run check-merge-conflict --config
           .github/pre-commit-ci-config.yaml --files ${{

@@ -1,4 +1,5 @@
 """This module contains the CoursesStore class."""
+
 from collections.abc import Iterator, MutableSet
 from dataclasses import astuple
 from threading import RLock
@@ -35,8 +36,10 @@ class CoursesStore(MutableSet):
             for course in args:
                 self._add(course)
 
-    def __contains__(self, course: UdemyCourseT) -> bool:
+    def __contains__(self, course: object) -> bool:
         """Checks if the given element is in the store."""
+        if not isinstance(course, UdemyCourseT):
+            return False
         if course.url_id in self._any_coupon:
             return True
 
@@ -75,15 +78,15 @@ class CoursesStore(MutableSet):
 
         return repr_
 
-    def add(self, course: UdemyCourseT) -> None:
+    def add(self, value: UdemyCourseT) -> None:  # noqa: WPS110
         """Adds a course to the store."""
         with self._lock:
-            self._add(course)
+            self._add(value)
 
-    def discard(self, course: UdemyCourseT) -> None:
+    def discard(self, value: UdemyCourseT) -> None:  # noqa: WPS110
         """Removes a course without raising if it doesn't exist."""
         with self._lock:
-            self._discard(course)
+            self._discard(value)
 
     def optimize(self) -> None:
         """Optimizes the memory usage by removing redundant courses."""

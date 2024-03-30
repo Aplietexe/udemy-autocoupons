@@ -1,4 +1,5 @@
 """This module contains the TutorialbarScraper scraper."""
+
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta, timezone

@@ -1,4 +1,5 @@
 """This module provides a function to follow redirects."""
+
 from asyncio import Semaphore, sleep
 from logging import getLogger
 from threading import Event
