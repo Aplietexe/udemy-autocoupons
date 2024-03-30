@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from asyncio import TaskGroup, run
 from logging import getLogger
+from queue import Queue as MtQueue
 from threading import Event, Thread
 
 from aiohttp import ClientSession
@@ -57,7 +58,7 @@ async def main() -> None:
             mt_queue.put(error)
 
         printer.info("Reattempting %s previously failed courses", len(errors))
-        errors.clear()
+        new_errors_queue = MtQueue()
 
         # Listen for courses in the multithreading queue
         thread = Thread(
@@ -65,7 +66,7 @@ async def main() -> None:
             args=(
                 mt_queue,
                 courses_store,
-                errors,
+                new_errors_queue,
                 stop_event,
                 args["profile_directory"],
                 args["user_data_dir"],
@@ -98,6 +99,9 @@ async def main() -> None:
     debug.debug("Waiting for thread to finish")
     thread.join()
 
+    errors.clear()
+    while not new_errors_queue.empty():
+        errors.append(new_errors_queue.get())
     save_scrapers_data(scrapers)
     save_courses_store(courses_store)
     save_errors(errors)

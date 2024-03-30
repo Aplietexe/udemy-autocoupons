@@ -8,7 +8,6 @@ from typing import Any
 
 from udemy_autocoupons.courses_store import CoursesStore
 from udemy_autocoupons.scrapers import ScrapersT
-from udemy_autocoupons.thread_safe_list import ThreadSafeList
 from udemy_autocoupons.udemy_course import CourseWithCoupon
 
 _debug = getLogger("debug")
@@ -68,27 +67,23 @@ def load_courses_store() -> CoursesStore:
     return courses_store
 
 
-def save_errors(errors: ThreadSafeList[CourseWithCoupon]) -> None:
+def save_errors(errors: list[CourseWithCoupon]) -> None:
     """Saves the errors to a file.
 
     Args:
         errors: The previous errors.
 
     """
-    _save_persistent("errors.pickle", errors.to_list())
+    _save_persistent("errors.pickle", errors)
 
 
-def load_errors() -> ThreadSafeList[CourseWithCoupon]:
+def load_errors() -> list[CourseWithCoupon]:
     """Loads the errors.
 
     Returns:
-        The errors if they can be found, an empty ThreadSafeList otherwise.
-
+        The errors if they can be found, an empty list otherwise.
     """
-    if previous := _load_persistent("errors.pickle"):
-        return ThreadSafeList(previous)
-
-    return ThreadSafeList()
+    return _load_persistent("errors.pickle") or []
 
 
 def _save_persistent(filename: str, to_persist: Any) -> None:

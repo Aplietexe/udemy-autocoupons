@@ -9,14 +9,13 @@ from threading import Event
 from udemy_autocoupons.courses_store import CoursesStore
 from udemy_autocoupons.enroller.enroller import Enroller
 from udemy_autocoupons.enroller.udemy_driver import UdemyDriver
-from udemy_autocoupons.thread_safe_list import ThreadSafeList
 from udemy_autocoupons.udemy_course import CourseWithCoupon
 
 
 def run_driver(
     mt_queue: MtQueue[CourseWithCoupon | None],
     courses_store: CoursesStore,
-    errors: ThreadSafeList[CourseWithCoupon],
+    errors: MtQueue[CourseWithCoupon],
     stop_event: Event,
     profile_directory: str,
     user_data_dir: str,
@@ -52,7 +51,7 @@ def run_driver(
 def _run_driver(
     mt_queue: MtQueue[CourseWithCoupon | None],
     courses_store: CoursesStore,
-    errors: ThreadSafeList[CourseWithCoupon],
+    errors: MtQueue[CourseWithCoupon],
     stop_event: Event,
     profile_directory: str,
     user_data_dir: str,
@@ -74,9 +73,10 @@ def _run_driver(
 
     enroller = Enroller(driver, mt_queue, courses_store, stop_event)
     new_errors = enroller.enroll_from_queue()
-    errors.extend(new_errors)
+    for error in new_errors:
+        errors.put(error)
 
-    debug.debug("Finished enrolling. Errors: %s", errors)
+    debug.debug("Finished enrolling. Errors: %s", new_errors)
 
     debug.debug("Quitting driver")
 
