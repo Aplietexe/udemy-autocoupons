@@ -1,4 +1,5 @@
 """This module contains the UdemyDriver class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -156,6 +157,8 @@ class UdemyDriver:
         private_button_selector = '[class*="course-landing-page-private"]'
 
         checks = [
+            lambda driver: driver.find_element(By.CSS_SELECTOR, "body").text
+            == "Forbidden",
             EC.url_contains("/topic/"),
             EC.url_contains("/courses/"),
             EC.url_contains("/draft/"),
@@ -174,6 +177,7 @@ class UdemyDriver:
 
         self._wait.until(EC.any_of(*checks))
 
+        body_text = self.driver.find_element(By.CSS_SELECTOR, "body").text
         unavailable_elements = self._find_elements(unavailable_selector)
         banner404_elements = self._find_elements(banner404_selector)
         private_button_elements = self._find_elements(private_button_selector)
@@ -198,7 +202,8 @@ class UdemyDriver:
         )
 
         to_blacklist = (
-            "/topic/" in self.driver.current_url
+            body_text == "Forbidden"
+            or "/topic/" in self.driver.current_url
             or "/courses/" in self.driver.current_url
             or "/draft/" in self.driver.current_url
             or self.driver.current_url == "https://www.udemy.com/"
