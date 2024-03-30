@@ -96,6 +96,8 @@ async def _send_req(
             _debug.debug("Got code %s from %s", res.status, url)
             raise BadStatusCodeError(res.status)
 
-        res_body = await (res.json() if content_type == "json" else res.text())
-
-    return res_body
+        return (
+            await res.json(content_type=None)
+            if content_type == "json"
+            else await res.text()
+        )
