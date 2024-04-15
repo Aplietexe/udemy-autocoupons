@@ -27,7 +27,7 @@ class Enroller:
     def __init__(
         self,
         driver: UdemyDriver,
-        mt_queue: MtQueue,
+        mt_queue: MtQueue[CourseWithCoupon | None],
         courses_store: CoursesStore,
         stop_event: Event,
     ) -> None:
@@ -92,7 +92,7 @@ class Enroller:
 
         """
         while course := self._mt_queue.get():
-            self._handle_enroll(course)
+            self._handle_enroll(course, reattempt=False)
             self._mt_queue.task_done()
 
         _debug.debug("Got None in multithreading queue")
@@ -107,10 +107,12 @@ class Enroller:
                 len(self._reattempt_queue),
             )
 
-            self._handle_enroll(course)
+            self._handle_enroll(course, reattempt=True)
 
-    def _handle_enroll(self, course: CourseWithCoupon) -> None:
-        if course in self._courses_store:
+    def _handle_enroll(self, course: CourseWithCoupon, reattempt: bool) -> None:
+        if not reattempt and self._attempts[course]:
+            _debug.debug("%s is already in reattempt queue", course)
+        elif course in self._courses_store:
             _debug.debug("%s is already in store", course)
         else:
             state = self._driver.enroll(course)
