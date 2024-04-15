@@ -170,6 +170,7 @@ class UdemyDriver:
             self._ec_located(self._SELECTORS["FREE_BADGE"]),
             self._ec_located(self._SELECTORS["PURCHASED"]),
             self._ec_located(self._SELECTORS["FREE_COURSE"]),
+            self._ec_located(self._SELECTORS["PRICE_SELECTOR"]),
         ]
 
         if course.coupon:
@@ -186,6 +187,9 @@ class UdemyDriver:
         free_course_elements = self._find_elements(
             self._SELECTORS["FREE_COURSE"],
         )
+        price = self._find_elements(
+            self._SELECTORS["PRICE_SELECTOR"],
+        ) and self._get_price(self.driver)
 
         _debug.debug(
             "Url: %s; unavailable: %s; banner404: %s",
@@ -194,11 +198,12 @@ class UdemyDriver:
             banner404_elements,
         )
         _debug.debug(
-            "private_button: %s; free_badge: %s; purchased: %s; free_course: %s",
+            "private_button: %s; free_badge: %s; purchased: %s; free_course: %s; price: %s",
             private_button_elements,
             free_badge_elements,
             purchased_elements,
             free_course_elements,
+            price,
         )
 
         to_blacklist = (
@@ -218,7 +223,11 @@ class UdemyDriver:
         if to_blacklist:
             return State.TO_BLACKLIST
 
-        if self.driver.current_url == course.with_any_coupon().url:
+        is_paid = self.driver.current_url == course.with_any_coupon().url or (
+            price and "$" in price
+        )
+
+        if is_paid:
             return State.PAID
 
         return State.ENROLLABLE
