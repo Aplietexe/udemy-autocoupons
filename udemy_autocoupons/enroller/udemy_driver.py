@@ -38,6 +38,7 @@ class UdemyDriver:
 
     _SELECTORS = {
         "ENROLL_BUTTON": '[class*="sidebar-container--content"] [data-purpose*="buy-this-course-button"].ud-btn-primary',
+        "CART_BUTTON": '[class*="sidebar-container--content"] [data-purpose*="add-to-cart"] button',
         "FREE_BADGE": '.ud-badge-free, [class*="course-badges-module--free"]',
         "PURCHASED": '[class*="purchase-info"]',
         "FREE_COURSE": '[class*="generic-purchase-section--free-course"]',
@@ -111,8 +112,7 @@ class UdemyDriver:
             _debug.debug("_get_course_state is %s for %s", state, course.url)
             return state
 
-        _debug.debug("Waiting for enroll button clickable")
-        self._wait_for_clickable(self._SELECTORS["ENROLL_BUTTON"]).click()
+        self._go_to_checkout()
 
         _debug.debug("Checking if checkout is correct")
         if (state := self._checkout_is_correct()) != State.ENROLLABLE:
@@ -141,6 +141,36 @@ class UdemyDriver:
 
         self._wait.until(lambda driver: "checkout" not in driver.current_url)
         return State.ENROLLED
+
+    def _go_to_checkout(self) -> None:
+        """Goes to the checkout page."""
+        checks = [
+            self._ec_located(self._SELECTORS["ENROLL_BUTTON"]),
+            self._ec_clickable(self._SELECTORS["CART_BUTTON"]),
+        ]
+        _debug.debug("Waiting for enroll or cart buttons")
+        self._wait.until(EC.any_of(*checks))
+
+        enroll_buttons = self._find_elements(self._SELECTORS["ENROLL_BUTTON"])
+        cart_buttons = self._find_elements(self._SELECTORS["CART_BUTTON"])
+
+        _debug.debug(
+            "Enroll buttons: %s; cart buttons: %s",
+            enroll_buttons,
+            cart_buttons,
+        )
+
+        if enroll_buttons:
+            self._wait_for_clickable(self._SELECTORS["ENROLL_BUTTON"]).click()
+            return
+
+        cart_buttons[0].click()
+        go_to_cart_button_selector = '[data-purpose*="go-to-cart-button"]'
+        _debug.debug("Waiting for go to cart button")
+        self._wait_for_clickable(go_to_cart_button_selector).click()
+        checkout_button_selector = '[data-purpose*="shopping-cart-checkout"]'
+        _debug.debug("Waiting for checkout button")
+        self._wait_for_clickable(checkout_button_selector).click()
 
     def _fast_course_state(self, course: CourseWithCoupon) -> _CheckedStateT:
         """Check if the current course on screen is enrollable.
